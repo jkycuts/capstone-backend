@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\auth\ProfileController;
+use App\Http\Controllers\auth\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,13 +17,13 @@ use App\Http\Controllers\Auth\UserController;
 |
 */
 
-// // Public APIs
-// Route::post('/login', [AuthController::class, 'login'])->name('user.login');
-   Route::post('/user', [UserController::class, 'store'])->name('user.store');
+// Public APIs
+    Route::post('/login', [AuthController::class, 'login'])->name('user.login');
+    Route::post('/user', [UserController::class, 'store'])->name('user.store');
 
 // // Private APIs
-// Route::middleware(['auth:sanctum'])->group(function () {
-//     Route::get('/logout', [AuthController::class, 'logout']);
+    Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/logout', [AuthController::class, 'logout']);
 
     // Admin APIs
     Route::controller(UserController::class)->group(function () {
@@ -34,7 +36,7 @@ use App\Http\Controllers\Auth\UserController;
         Route::delete('/user/{id}',         'destroy');
     });
 
-//     // User Specific APIs
-//     Route::get('/profile/show',  [ProfileController::class, 'show']);
-//     Route::put('/profile/image', [ProfileController::class, 'image'])->name('profile.image');
-// });
+    // User Specific APIs
+    Route::get('/profile/show',  [ProfileController::class, 'show']);
+    Route::put('/profile/image', [ProfileController::class, 'image'])->name('profile.image');
+});
