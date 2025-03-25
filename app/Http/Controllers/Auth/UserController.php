@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\UserRequest;
-
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -33,92 +33,92 @@ class UserController extends Controller
         return $user;
     }
 
-    //  /**
-    //  * Display the specified resource.
-    //  */
-    // public function show(string $id)
-    // {
-    //     return User::find($id);
-    // }
+     /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        return User::find($id);
+    }
 
-    // /**
-    //  * Update the specified resource in storage.
-    //  */
-    // public function update(UserRequest $request, string $id)
-    // {
-    //     $user = User::findORFail($id);
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UserRequest $request, string $id)
+    {
+        $user = User::findORFail($id);
 
-    //     $validated = $request->validated();
+        $validated = $request->validated();
 
-    //     $user->name = $validated['name'];
+        $user->name = $validated['name'];
 
-    //     $user->save();
+        $user->save();
 
-    //     return $user;
-    // }
+        return $user;
+    }
 
-    // /**
-    //  * Update the email resource in storage.
-    //  */
-    // public function email(UserRequest $request, string $id)
-    // {
+    /**
+     * Update the email resource in storage.
+     */
+    public function email(UserRequest $request, string $id)
+    {
 
-    //     $user = User::findORFail($id);
+        $user = User::findORFail($id);
 
-    //     $validated = $request->validated();
+        $validated = $request->validated();
 
-    //     $user->email = $validated['email'];
+        $user->email = $validated['email'];
 
-    //     $user->save();
+        $user->save();
 
-    //     return $user;
-    // }
+        return $user;
+    }
 
-    // /**
-    //  * Update the password resource in storage.
-    //  */
-    // public function password(UserRequest $request, string $id)
-    // {
+    /**
+     * Update the password resource in storage.
+     */
+    public function password(UserRequest $request, string $id)
+    {
 
-    //     $user = User::findORFail($id);
+        $user = User::findORFail($id);
 
-    //     $validated = $request->validated();
+        $validated = $request->validated();
 
-    //     $validated['password'] = Hash::make($validated['password']);
+        $validated['password'] = Hash::make($validated['password']);
 
-    //     $user->save();
+        $user->save();
 
-    //     return $user;
-    // }
+        return $user;
+    }
 
-    // /**
-    //  * Remove the specified resource from storage.
-    //  */
-    // public function destroy(string $id)
-    // {
-    //     $user = User::findORFail($id);
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $user = User::findORFail($id);
 
-    //     $user->delete();
+        $user->delete();
 
-    //     return $user;
-    // }
+        return $user;
+    }
 
-    // /**
-    //  * Update the image of the specified resource from storage.
-    //  */
-    // public function image(UserRequest $request, string $id)
-    // {
-    //     $user = User::findORFail($id);
+    /**
+     * Update the image of the specified resource from storage.
+     */
+    public function image(UserRequest $request, string $id)
+    {
+        $user = User::findORFail($id);
 
-    //     if (!is_null($user->image)) {
-    //         Storage::disk('public')->delete($user->image);
-    //     }
+        if (!is_null($user->image)) {
+            Storage::disk('public')->delete($user->image);
+        }
 
-    //     $user->image = $request->file('image')->storePublicly('images', 'public');
+        $user->image = $request->file('image')->storePublicly('images', 'public');
 
 
-    //     $user->save();
+        $user->save();
 
-    //     return $user;
-    // }
+        return $user;
+    }
 }

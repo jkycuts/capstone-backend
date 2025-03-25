@@ -24,7 +24,8 @@ class UserRequest extends FormRequest
     {
         if (request()->routeIs('user.store')) {
             return [
-                'name'                => 'required|string|max:255',
+                'firstname'           => 'required|string|min:5',
+                'lastname'            => 'required|string|min:5',
                 'email'               => 'required|string|email|unique:App\Models\User,email|max:255',
                 'password'            => 'required|min:8|confirmed',
             ];
