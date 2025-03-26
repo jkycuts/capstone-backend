@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\auth\ProfileController;
 use App\Http\Controllers\auth\AuthController;
+use App\Models\MiningCompany;
+use App\Http\Controllers\auth\CompanyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,7 +25,9 @@ use App\Http\Controllers\auth\AuthController;
 
 // // Private APIs
     Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/logout', [AuthController::class, 'logout']);
+         Route::get('/logout',         [AuthController::class, 'logout']);
+         Route::post('/company',        [CompanyController::class, 'store']); // Assign company to user
+         Route::get('/user/company',    [CompanyController::class, 'show']); // Get user's company
 
     // Admin APIs
     Route::controller(UserController::class)->group(function () {
@@ -39,4 +43,9 @@ use App\Http\Controllers\auth\AuthController;
     // User Specific APIs
     Route::get('/profile/show',  [ProfileController::class, 'show']);
     Route::put('/profile/image', [ProfileController::class, 'image'])->name('profile.image');
+
+    // Mining Company APIs
+    
+
+
 });

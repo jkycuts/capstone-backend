@@ -9,10 +9,18 @@ class MiningCompany extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'location', 'user_id'];
+    protected $table = 'company'; // Ensure this matches your database table name
+
+    protected $fillable = [
+        'name', 
+        'location', 
+        'user_id'
+    ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
+
 }

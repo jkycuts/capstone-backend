@@ -60,8 +60,13 @@ class UserRequest extends FormRequest
             return [
                 'image'              => 'required|image|mimes:jpg,bmp,png|max:2048',
             ];
+
+            
         }
+
+        
         return [];
     }
+    
     }
 
