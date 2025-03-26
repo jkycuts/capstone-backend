@@ -7,6 +7,7 @@ use App\Http\Controllers\auth\ProfileController;
 use App\Http\Controllers\auth\AuthController;
 use App\Models\MiningCompany;
 use App\Http\Controllers\auth\CompanyController;
+use App\Http\Controllers\auth\SourceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,10 @@ use App\Http\Controllers\auth\CompanyController;
     Route::put('/profile/image', [ProfileController::class, 'image'])->name('profile.image');
 
     // Mining Company APIs
+
+    // Source APIs
+        Route::get('/source', [SourceController::class, 'store']);
+        Route::get('/source/{sourceID}', [SourceController::class, 'show']);
     
 
 

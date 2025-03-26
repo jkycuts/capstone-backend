@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class Source extends Model
 {
     use HasFactory;
@@ -43,5 +44,10 @@ class Source extends Model
         $totalEmission = $fuelEmission + $electricityEmission;
 
         return $totalEmission;
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(MiningCompany::class);
     }
 }
