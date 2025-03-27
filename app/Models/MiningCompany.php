@@ -22,5 +22,11 @@ class MiningCompany extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function Source()
+    {
+        return $this->hasMany(Source::class, 'companyID');
+    }
+
+    protected $primaryKey = 'id';
 
 }

@@ -48,8 +48,14 @@ use App\Http\Controllers\auth\SourceController;
     // Mining Company APIs
 
     // Source APIs
-        Route::get('/source', [SourceController::class, 'store']);
-        Route::get('/source/{sourceID}', [SourceController::class, 'show']);
+    Route::controller('source')->group(function () {
+
+        Route::get('/source',           [SourceController::class, 'index']); // Get all source
+        Route::post('/source',          [SourceController::class, 'store']); // Create a new source
+        Route::get('/source/{id}',      [SourceController::class, 'show']); // Get a single source
+        Route::put('/source/{id}',      [SourceController::class, 'update']); // Update source
+        Route::delete('/source{id}',    [SourceController::class, 'destroy']); // Delete source
+    });
     
 
 
