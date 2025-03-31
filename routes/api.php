@@ -54,7 +54,9 @@ use App\Http\Controllers\auth\SourceController;
         Route::post('/source',          [SourceController::class, 'store']); // Create a new source
         Route::get('/source/{id}',      [SourceController::class, 'show']); // Get a single source
         Route::put('/source/{id}',      [SourceController::class, 'update']); // Update source
-        Route::delete('/source{id}',    [SourceController::class, 'destroy']); // Delete source
+        Route::delete('/source/{id}',    [SourceController::class, 'destroy']); // Delete source
+        Route::get('/company/{companyID}/total-emissions', [SourceController::class, 'totalEmissionsByCompany']);
+
     });
     
 
