@@ -7,7 +7,9 @@ use App\Http\Controllers\auth\ProfileController;
 use App\Http\Controllers\auth\AuthController;
 use App\Models\MiningCompany;
 use App\Http\Controllers\auth\CompanyController;
-use App\Http\Controllers\auth\SourceController;
+use App\Http\Controllers\SourceController;
+use app\Http\Controllers\SourceEmissionController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -21,14 +23,12 @@ use App\Http\Controllers\auth\SourceController;
 */
 
 // Public APIs
-    Route::post('/login', [AuthController::class, 'login'])->name('user.login');
-    Route::post('/user', [UserController::class, 'store'])->name('user.store');
+    Route::post('/login',   [AuthController::class, 'login'])->name('user.login');
+    Route::post('/user',    [UserController::class, 'store'])->name('user.store');
 
 // // Private APIs
     Route::middleware(['auth:sanctum'])->group(function () {
          Route::get('/logout',         [AuthController::class, 'logout']);
-         Route::post('/company',        [CompanyController::class, 'store']); // Assign company to user
-         Route::get('/user/company',    [CompanyController::class, 'show']); // Get user's company
 
     // Admin APIs
     Route::controller(UserController::class)->group(function () {
@@ -46,18 +46,16 @@ use App\Http\Controllers\auth\SourceController;
     Route::put('/profile/image', [ProfileController::class, 'image'])->name('profile.image');
 
     // Mining Company APIs
+    Route::post('/company',        [CompanyController::class, 'store']); // Assign company to user
+    Route::get('/user/company',    [CompanyController::class, 'show']); // Get user's company
 
-    // Source APIs
-    Route::controller('source')->group(function () {
+    // Source Routes
+    Route::post('/source',                      [SourceController::class, 'store']);
+    Route::get('/source/{id}/emissions/{year}', [SourceController::class, 'calculateEmissions']);
 
-        Route::get('/source',           [SourceController::class, 'index']); // Get all source
-        Route::post('/source',          [SourceController::class, 'store']); // Create a new source
-        Route::get('/source/{id}',      [SourceController::class, 'show']); // Get a single source
-        Route::put('/source/{id}',      [SourceController::class, 'update']); // Update source
-        Route::delete('/source/{id}',    [SourceController::class, 'destroy']); // Delete source
-        Route::get('/company/{companyID}/total-emissions', [SourceController::class, 'totalEmissionsByCompany']);
-
-    });
+    // Source Emissions Routes
+    Route::post('/source-emissions',            [SourceEmissionController::class, 'store']);
+    Route::get('/source-emissions/{id}/{year}', [SourceEmissionController::class, 'getBySource']);
     
 
 
