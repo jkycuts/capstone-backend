@@ -7,8 +7,9 @@ use App\Http\Controllers\auth\ProfileController;
 use App\Http\Controllers\auth\AuthController;
 use App\Models\MiningCompany;
 use App\Http\Controllers\auth\CompanyController;
-use App\Http\Controllers\SourceController;
-use app\Http\Controllers\SourceEmissionController;
+use App\Http\Controllers\Auth\SourceController;
+use App\Http\Controllers\Auth\SourceEmissionController;
+
 
 
 /*
@@ -54,8 +55,8 @@ use app\Http\Controllers\SourceEmissionController;
     Route::get('/source/{id}/emissions/{year}', [SourceController::class, 'calculateEmissions']);
 
     // Source Emissions Routes
-    Route::post('/source-emissions',            [SourceEmissionController::class, 'store']);
-    Route::get('/source-emissions/{id}/{year}', [SourceEmissionController::class, 'getBySource']);
+    Route::post('/sourceemission',            [SourceEmissionController::class, 'store']);
+    Route::get('/sourceemission/{id}/{year}', [SourceEmissionController::class, 'getBySource']);
     
 
 

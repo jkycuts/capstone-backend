@@ -9,16 +9,17 @@ class SourceEmission extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'sourceID',
-        'year',
-        'quarter',
-        'fuel_consumption',
-        'electricity_usage'
-    ];
+    protected $table = 'source_emission'; 
 
-    public function source()
-    {
-        return $this->belongsTo(Source::class);
-    }
+    protected $fillable = [
+        'sourceID', 
+        'year', 
+        'quarter', 
+        'fuel_consumption', 
+        'electricity_usage',
+        'co2_emission',
+        'n2o_emission',
+        'electricity_emission',
+        'total_emission'
+    ];
 }

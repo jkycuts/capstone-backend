@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('source', function (Blueprint $table) {
-            $table->id(); 
-            $table->string('name'); 
-            $table->string('fuel_type')->nullable();
-            $table->foreignId('companyID')->constrained('company')->onDelete('cascade'); 
-            $table->timestamps();
+        Schema::table('source_emission', function (Blueprint $table) {
+            $table->decimal('co2_emission', 15, 2)->nullable();
+            $table->decimal('n2o_emission', 15, 2)->nullable();
+            $table->decimal('electricity_emission', 15, 2)->nullable();
+            $table->decimal('total_emission', 15, 2)->nullable();
         });
+        
     }
 
     /**
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('source');
+        //
     }
 };

@@ -1,25 +1,38 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
-use App\Models\Source;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Source;
 
 class SourceController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate([
+        $user = auth()->user();
+
+        // Check if user has an associated company
+        if (!$user->companyID) {
+            return response()->json(['message' => 'No company associated with this user'], 403);
+        }
+
+        // Validate request (excluding companyID since it's auto-assigned)
+        $validatedData = $request->validate([
             'name'          => 'required|string',
-            'fuel_type'     => 'required|string',
-            'companyID'     => 'required|integer'
+            'fuel_type'     => 'required|string|in:diesel,gasoline',
+            
         ]);
 
-        $source = Source::create($request->all());
+        // Assign user's companyID automatically
+        $validatedData['companyID'] = $user->companyID;
+
+        // Create the Source
+        $source = Source::create($validatedData);
 
         return response()->json([
-            'message'       => 'Source created successfully',
-            'source'        => $source
+            'message' => 'Source created successfully',
+            'source'  => $source
         ], 201);
     }
 
@@ -29,10 +42,10 @@ class SourceController extends Controller
         $emissions = $source->calculateYearlyEmissions($year);
 
         return response()->json([
-            'source'        => $source->name,
-            'fuel_type'     => $source->fuel_type,
-            'year'          => $year,
-            'emissions'     => $emissions
+            'source'    => $source->name,
+            'fuel_type' => $source->fuel_type,
+            'year'      => $year,
+            'emissions' => $emissions
         ]);
     }
 }
