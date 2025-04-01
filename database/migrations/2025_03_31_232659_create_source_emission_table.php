@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('source_emission', function (Blueprint $table) {
+        Schema::create('source_emissions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sourceID')->constrained('source')->onDelete('cascade');
+            $table->foreignId('source_id')->constrained('sources')->onDelete('cascade');
             $table->integer('year'); // Stores year of the data
             $table->enum('quarter', ['Q1', 'Q2', 'Q3', 'Q4']); // Stores quarterly records
             $table->decimal('fuel_consumption', 10, 4);
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('source_emission');
+        Schema::dropIfExists('source_emissions');
     }
 };

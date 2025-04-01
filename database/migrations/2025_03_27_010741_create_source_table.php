@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('source', function (Blueprint $table) {
+        Schema::create('sources', function (Blueprint $table) {
             $table->id(); 
             $table->string('name'); 
             $table->string('fuel_type')->nullable();
-            $table->foreignId('companyID')->constrained('company')->onDelete('cascade'); 
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade'); 
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('source');
+        Schema::dropIfExists('sources');
     }
 };

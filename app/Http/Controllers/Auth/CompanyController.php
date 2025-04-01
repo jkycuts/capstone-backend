@@ -26,9 +26,9 @@ class CompanyController extends Controller
 
         // Create a new mining company and link it to the user
         $company = MiningCompany::create([
-            'name' => $validated['name'],
-            'location' => $validated['location'],
-            'user_id' => $user->id,
+            'name'          => $validated['name'],
+            'location'      => $validated['location'],
+            'user_id'       => $user->id,
         ]);
 
         return response()->json($company, 201);

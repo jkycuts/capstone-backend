@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('source_emission', function (Blueprint $table) {
+        Schema::table('source_emissions', function (Blueprint $table) {
             $table->decimal('co2_emission', 15, 2)->nullable();
             $table->decimal('n2o_emission', 15, 2)->nullable();
             $table->decimal('electricity_emission', 15, 2)->nullable();

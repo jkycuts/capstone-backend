@@ -47,16 +47,16 @@ use App\Http\Controllers\Auth\SourceEmissionController;
     Route::put('/profile/image', [ProfileController::class, 'image'])->name('profile.image');
 
     // Mining Company APIs
-    Route::post('/company',        [CompanyController::class, 'store']); // Assign company to user
-    Route::get('/user/company',    [CompanyController::class, 'show']); // Get user's company
+    Route::post('/companies',        [CompanyController::class, 'store']); // Assign company to user
+    Route::get('/user/companies',    [CompanyController::class, 'show']); // Get user's company
 
     // Source Routes
-    Route::post('/source',                      [SourceController::class, 'store']);
-    Route::get('/source/{id}/emissions/{year}', [SourceController::class, 'calculateEmissions']);
+    Route::post('/sources',                      [SourceController::class, 'store']);
+    Route::get('/sources/{id}/emissions/{year}', [SourceController::class, 'calculateEmissions']);
 
     // Source Emissions Routes
-    Route::post('/sourceemission',            [SourceEmissionController::class, 'store']);
-    Route::get('/sourceemission/{id}/{year}', [SourceEmissionController::class, 'getBySource']);
+    Route::post('/sourceemissions',            [SourceEmissionController::class, 'store']);
+    Route::get('/sourceemissions/{id}/{year}', [SourceEmissionController::class, 'getBySource']);
     
 
 

@@ -13,7 +13,7 @@ class SourceController extends Controller
         $user = auth()->user();
 
         // Check if user has an associated company
-        if (!$user->companyID) {
+        if (!$user->company_id) {
             return response()->json(['message' => 'No company associated with this user'], 403);
         }
 
@@ -25,7 +25,7 @@ class SourceController extends Controller
         ]);
 
         // Assign user's companyID automatically
-        $validatedData['companyID'] = $user->companyID;
+        $validatedData['company_id'] = $user->company_id;
 
         // Create the Source
         $source = Source::create($validatedData);

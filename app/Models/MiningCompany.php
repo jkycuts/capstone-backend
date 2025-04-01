@@ -9,7 +9,7 @@ class MiningCompany extends Model
 {
     use HasFactory;
 
-    protected $table = 'company'; // Ensure this matches your database table name
+    protected $table = 'companies'; // Ensure this matches your database table name
 
     protected $fillable = [
         'name', 
@@ -24,7 +24,7 @@ class MiningCompany extends Model
 
     public function Source()
     {
-        return $this->hasMany(Source::class, 'companyID');
+        return $this->hasMany(Source::class, 'company_id');
     }
 
     protected $primaryKey = 'id';
