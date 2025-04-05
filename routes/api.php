@@ -7,8 +7,7 @@ use App\Http\Controllers\auth\ProfileController;
 use App\Http\Controllers\auth\AuthController;
 use App\Models\MiningCompany;
 use App\Http\Controllers\auth\CompanyController;
-use App\Http\Controllers\Auth\SourceController;
-use App\Http\Controllers\Auth\SourceEmissionController;
+use App\Http\Controllers\Auth\CarbonSequestrationController;
 
 
 
@@ -50,14 +49,11 @@ use App\Http\Controllers\Auth\SourceEmissionController;
     Route::post('/companies',        [CompanyController::class, 'store']); // Assign company to user
     Route::get('/user/companies',    [CompanyController::class, 'show']); // Get user's company
 
-    // Source Routes
-    Route::post('/sources',                      [SourceController::class, 'store']);
-    Route::get('/sources/{id}/emissions/{year}', [SourceController::class, 'calculateEmissions']);
-
-    // Source Emissions Routes
-    Route::post('/sourceemissions',            [SourceEmissionController::class, 'store']);
-    Route::get('/sourceemissions/{id}/{year}', [SourceEmissionController::class, 'getBySource']);
     
-
+    // Tree Growth Routes
+    Route::post('/plantation',                              [CarbonSequestrationController::class, 'storePlantation']);
+    Route::post('/tree-growth',                             [CarbonSequestrationController::class, 'storeTreeGrowth']);
+    Route::put('tree-growth/{id}',                          [CarbonSequestrationController::class, 'updateTreeGrowth']);
+    Route::get('/carbon-sequestration/{plantationId}',      [CarbonSequestrationController::class, 'calculateCarbonSequestration']);
 
 });
