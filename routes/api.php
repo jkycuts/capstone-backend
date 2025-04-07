@@ -8,6 +8,7 @@ use App\Http\Controllers\auth\AuthController;
 use App\Models\MiningCompany;
 use App\Http\Controllers\auth\CompanyController;
 use App\Http\Controllers\Auth\CarbonSequestrationController;
+use App\Http\Controllers\Auth\GHGEmissionController;
 
 
 
@@ -50,10 +51,19 @@ use App\Http\Controllers\Auth\CarbonSequestrationController;
     Route::get('/user/companies',    [CompanyController::class, 'show']); // Get user's company
 
     
-    // Tree Growth Routes
+    // Tree Growth APIs
     Route::post('/plantation',                              [CarbonSequestrationController::class, 'storePlantation']);
     Route::post('/tree-growth',                             [CarbonSequestrationController::class, 'storeTreeGrowth']);
-    Route::put('tree-growth/{id}',                          [CarbonSequestrationController::class, 'updateTreeGrowth']);
+    Route::put('/tree-growth/{id}',                          [CarbonSequestrationController::class, 'updateTreeGrowth']);
     Route::get('/carbon-sequestration/{plantationId}',      [CarbonSequestrationController::class, 'calculateCarbonSequestration']);
+
+    // GHG Emission APIs
+    Route::controller(GhgEmissionController::class)->group(function () {
+        Route::get('/ghg-emission',             [GhgEmissionController::class, 'index']);
+        Route::post('/ghg-emission',            [GhgEmissionController::class, 'store']);
+        Route::get('/ghg-emission/{id}',        [GhgEmissionController::class, 'show']);
+        Route::put('/ghg-emission/{id}',        [GhgEmissionController::class, 'update']);
+        Route::delete('/ghg-emission/{id}',     [GhgEmissionController::class, 'destroy']);
+    });
 
 });
