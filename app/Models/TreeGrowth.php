@@ -15,7 +15,7 @@ class TreeGrowth extends Model
         'dbh',
         'height',
         'latitude',
-        'longtitude',
+        'longitude',
         'plantation_id'
     ];
 }

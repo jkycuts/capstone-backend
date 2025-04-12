@@ -16,8 +16,11 @@ return new class extends Migration
             $table->foreignId('plantation_id')->constrained('plantation')->onDelete('cascade');  // linking to the plantation
             $table->float('dbh'); // diameter at breast height (in cm)
             $table->float('height');
-            $table->json('geotag_photos')->nullable();  // Geotagged photos for the tree
+            $table->float('longitude');
+            $table->float('latitude');
             $table->timestamps();
+
+            
         });
     }
 

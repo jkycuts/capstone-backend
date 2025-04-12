@@ -18,8 +18,8 @@ return new class extends Migration
             $table->decimal('annual_carbon_sequestration', 12, 4)->default(0);
             $table->decimal('carbon_neutrality_variance', 12, 4)->default(0);
             $table->decimal('ghg_percentage_national', 6, 4)->default(0);
-            $table->unsignedBigInteger('company_id');
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            
+            $table->foreignID('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->timestamps();
         });
     }

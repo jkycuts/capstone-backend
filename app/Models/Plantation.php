@@ -23,6 +23,7 @@ class Plantation extends Model
         'seedlings_planted',
         'plantation_age',
         'geotag_photos',
-        'user_id'
+        
+        'company_id'
     ];
 }

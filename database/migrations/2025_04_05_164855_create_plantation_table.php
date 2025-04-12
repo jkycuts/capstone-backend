@@ -16,10 +16,10 @@ return new class extends Migration
             $table->float('area_planted');  // in hectares
             $table->integer('seedlings_planted');
             $table->date('plantation_age');  // date when plantation started
-            $table->json('geotag_photos');   // to store geotagged photo information
+            $table->string('geotag_photos')->nullable();   // to store geotagged photo information
             $table->timestamps();
 
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');  // Set up foreign key constraint
+           
             $table->foreignId('company_id')->constrained()->onDelete('cascade');  // Set up foreign key constraint
         });
     }
