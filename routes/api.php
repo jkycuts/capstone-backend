@@ -9,6 +9,8 @@ use App\Models\MiningCompany;
 use App\Http\Controllers\auth\CompanyController;
 use App\Http\Controllers\Auth\CarbonSequestrationController;
 use App\Http\Controllers\Auth\GHGEmissionController;
+use App\Http\Controllers\Auth\AnnualSummaryController;
+
 
 
 
@@ -29,7 +31,15 @@ use App\Http\Controllers\Auth\GHGEmissionController;
 
 // // Private APIs
     Route::middleware(['auth:sanctum'])->group(function () {
-         Route::get('/logout',         [AuthController::class, 'logout']);
+         Route::get('/logout',                   [AuthController::class, 'logout']);
+         Route::get('/ghg-emission',             [GhgEmissionController::class, 'index']);
+         Route::post('/ghg-emission',            [GhgEmissionController::class, 'store']);
+         Route::get('/ghg-emission/{id}',        [GhgEmissionController::class, 'show']);
+         Route::put('/ghg-emission/{id}',        [GhgEmissionController::class, 'update']);
+         Route::delete('/ghg-emission/{id}',     [GhgEmissionController::class, 'destroy']);
+         Route::post('/companies',               [CompanyController::class, 'store']); // Assign company to user
+         Route::post('/plantation',              [CarbonSequestrationController::class, 'storePlantation']);
+         Route::post('/tree-growth',             [CarbonSequestrationController::class, 'storeTreeGrowth']);
 
     // Admin APIs
     Route::controller(UserController::class)->group(function () {
@@ -52,18 +62,17 @@ use App\Http\Controllers\Auth\GHGEmissionController;
 
     
     // Tree Growth APIs
-    Route::post('/plantation',                              [CarbonSequestrationController::class, 'storePlantation']);
-    Route::post('/tree-growth',                             [CarbonSequestrationController::class, 'storeTreeGrowth']);
+   
     Route::put('/tree-growth/{id}',                          [CarbonSequestrationController::class, 'updateTreeGrowth']);
     Route::get('/carbon-sequestration/{plantationId}',      [CarbonSequestrationController::class, 'calculateCarbonSequestration']);
 
-    // GHG Emission APIs
-    Route::controller(GhgEmissionController::class)->group(function () {
-        Route::get('/ghg-emission',             [GhgEmissionController::class, 'index']);
-        Route::post('/ghg-emission',            [GhgEmissionController::class, 'store']);
-        Route::get('/ghg-emission/{id}',        [GhgEmissionController::class, 'show']);
-        Route::put('/ghg-emission/{id}',        [GhgEmissionController::class, 'update']);
-        Route::delete('/ghg-emission/{id}',     [GhgEmissionController::class, 'destroy']);
-    });
+   
+   
 
+    Route::resource('annual-summaries', AnnualSummaryController::class);
+
+ 
+
+   
+    
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\GHGEmission;
+use Illuminate\Support\Facades\Log;
 
 class GHGEmissionController extends Controller
 {
@@ -18,23 +19,25 @@ class GHGEmissionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'year' => 'required|integer',
-            'quarter' => 'required|in:Q1,Q2,Q3,Q4',
-            'fuel_source' => 'required|in:vehicle,generator',
-            'fuel_type' => 'required|in:diesel,biodiesel,ethanol,gasoline',
-            'fuel_liters_used' => 'required|numeric',
-            'electricity_kwh' => 'required|numeric',
-            'travel_category' => 'required|in:short,medium,long,unknown',
-            'travel_distance_miles' => 'required|integer',
-            'travel_number_of_trips' => 'required|integer',
+            'year'                      => 'required|integer',
+            'quarter'                   => 'required|in:Q1,Q2,Q3,Q4',
+            'fuel_source'               => 'required|string',
+            'fuel_type'                 => 'required|in:diesel,biodiesel,ethanol,gasoline',
+            'fuel_liters_used'          => 'required|numeric',
+            'electricity_kwh'           => 'required|numeric',
+            'travel_category'           => 'required|in:short,medium,long,unknown',
+            'travel_distance_miles'     => 'required|integer',
+            'travel_number_of_trips'    => 'required|integer',
         ]);
+
+        
 
         // Emission factors & GWP
         $emissionFactors = [
-            'diesel' => ['co2' => 2.712681, 'ch4' => 0.000143, 'n2o' => 0.000143],
-            'biodiesel' => ['co2' => 0.0, 'ch4' => 0.000382, 'n2o' => 0.000872],
-            'ethanol' => ['co2' => 0.0, 'ch4' => 0.0001, 'n2o' => 0.0001], // assumed
-            'gasoline' => ['co2' => 2.297040, 'ch4' => 0.000671, 'n2o' => 0.000210],
+            'diesel'        => ['co2' => 2.712681,  'ch4' => 0.000143,      'n2o' => 0.000143],
+            'biodiesel'     => ['co2' => 0.0,       'ch4' => 0.000382,      'n2o' => 0.000872],
+            'ethanol'       => ['co2' => 0.0,       'ch4' => 0.0001,        'n2o' => 0.0001], // assumed
+            'gasoline'      => ['co2' => 2.297040,  'ch4' => 0.000671,      'n2o' => 0.000210],
         ];
 
         $gwp = ['co2' => 1, 'ch4' => 21, 'n2o' => 310];

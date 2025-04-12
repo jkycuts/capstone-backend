@@ -14,7 +14,8 @@ class TreeGrowth extends Model
     protected $fillable = [
         'dbh',
         'height',
-        
+        'latitude',
+        'longtitude',
         'plantation_id'
     ];
 }
