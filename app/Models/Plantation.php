@@ -18,12 +18,15 @@ class Plantation extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function treeGrowth() {
+        return $this->hasMany(TreeGrowth::class);
+    }
+
     protected $fillable = [
         'area_planted',
         'seedlings_planted',
         'plantation_age',
-        'geotag_photos',
-        
+        'date_recorded',
         'company_id'
     ];
 }

@@ -31,33 +31,47 @@ class GhgEmission extends Model
         'travel_number_of_trips',
         'travel_co2_emission',
 
+        // Emission totals
+        'fuel_tco2',
+        'electricity_tco2',
+        'business_travel_tco2',
+        'total_tco2',
+
+        'date_recorded',
+
+        // Foreign key to company
         'company_id',
     ];
 
-    // Automatically calculated attributes
+    // Appended calculated attributes
     protected $appends = ['total_emission_tco2'];
-    
 
     /**
-     * Accessor to compute total emissions for CO₂
-     * Combines Scope 1, 2, and 3
+     * Accessor: Calculate total emissions (Scopes 1, 2, 3)
      */
     public function getTotalEmissionTco2Attribute()
     {
         return round(
             ($this->fuel_co2_emission ?? 0) +
             ($this->electricity_co2_emission ?? 0) +
-            ($this->travel_co2_emission ?? 0), 4
+            ($this->travel_co2_emission ?? 0),
+            4
         );
     }
 
     /**
-     * Optional: If tracking which user submitted the data
+     * Relationship: Emission belongs to a company
+     */
+    public function company()
+    {
+        return $this->belongsTo(MiningCompany::class);
+    }
+
+    /**
+     * Optional: Track which user submitted the emission
      */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
-    
 }

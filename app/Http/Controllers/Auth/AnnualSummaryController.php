@@ -8,60 +8,26 @@ use App\Models\AnnualSummary;
 
 class AnnualSummaryController extends Controller
 {
-    public function index()
+    public function latest()
     {
-        $summaries = AnnualSummary::orderBy('year', 'desc')->get();
-        return view('annual_summaries.index', compact('summaries'));
-    }
+        $summary = AnnualSummary::latest('year')->first();
 
-    public function create()
-    {
-        return view('annual_summaries.create');
-    }
+        // Optional: Hardcoded PH national GHG total (TCO₂) - Replace with actual value
+        $nationalGHGTotal = 139000000;
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'year' => 'required|integer|unique:annual_summaries',
-            'annual_carbon_emission' => 'required|numeric',
-            'annual_carbon_sequestration' => 'required|numeric',
-            'carbon_neutrality_variance' => 'required|numeric',
-            'percentage_ghg_contribution' => 'required|numeric',
-        ]);
-
-        AnnualSummary::create($validated);
-
-        return redirect()->route('annual-summaries.index')->with('success', 'Annual summary added successfully.');
-    }
-
-    public function show(AnnualSummary $annualSummary)
-    {
-        return view('annual_summaries.show', compact('annualSummary'));
-    }
-
-    public function edit(AnnualSummary $annualSummary)
-    {
-        return view('annual_summaries.edit', compact('annualSummary'));
-    }
-
-    public function update(Request $request, AnnualSummary $annualSummary)
-    {
-        $validated = $request->validate([
-            'year' => 'required|integer|unique:annual_summaries,year,' . $annualSummary->id,
-            'annual_carbon_emission' => 'required|numeric',
-            'annual_carbon_sequestration' => 'required|numeric',
-            'carbon_neutrality_variance' => 'required|numeric',
-            'percentage_ghg_contribution' => 'required|numeric',
-        ]);
-
-        $annualSummary->update($validated);
-
-        return redirect()->route('annual-summaries.index')->with('success', 'Annual summary updated.');
-    }
-
-    public function destroy(AnnualSummary $annualSummary)
-    {
-        $annualSummary->delete();
-        return redirect()->route('annual-summaries.index')->with('success', 'Annual summary deleted.');
+        if ($summary) {
+            return response()->json([
+                'company_name'                  => $summary->name,
+                'year'                          => $summary->year,
+                'carbon_emission'               => $summary->carbon_emission,
+                'carbon_sequestration'          => $summary->carbon_sequestration,
+                'carbon_neutrality_variance'    => $summary->carbon_emission - $summary->carbon_sequestration,
+                'percentage_ghg_contribution'   => ($summary->carbon_emission / $nationalGHGTotal) * 100
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'No summary data found.'
+            ], 404);
+        }
     }
 }

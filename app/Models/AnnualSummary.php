@@ -9,8 +9,11 @@ class AnnualSummary extends Model
 {
     use HasFactory;
 
+    protected $table = 'annual_summary'; 
+
     protected $fillable = [
         'year',
+        'company_name',
         'annual_carbon_emission',
         'annual_carbon_sequestration',
         'carbon_neutrality_variance',

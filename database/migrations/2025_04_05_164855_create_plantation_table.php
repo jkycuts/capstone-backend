@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->float('area_planted');  // in hectares
             $table->integer('seedlings_planted');
-            $table->date('plantation_age');  // date when plantation started
-            $table->string('geotag_photos')->nullable();   // to store geotagged photo information
+            $table->integer('plantation_age');  // date when plantation started
+            $table->date('date_recorded');  // date when plantation started
             $table->timestamps();
 
            

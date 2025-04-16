@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('tree_growth', function (Blueprint $table) {
             $table->id();
             $table->foreignId('plantation_id')->constrained('plantation')->onDelete('cascade');  // linking to the plantation
+            $table->string('species');
             $table->float('dbh'); // diameter at breast height (in cm)
             $table->float('height');
+            $table->string('geotag_photos')->nullable();   // to store geotagged photo information
             $table->float('longitude');
             $table->float('latitude');
             $table->timestamps();

@@ -48,9 +48,10 @@ class User extends Authenticatable
     protected $primaryKey = 'id';
     
     public function company()
-{
-    return $this->belongsTo(MiningCompany::class, 'companyID');
-}
+    {
+        return $this->belongsTo(MiningCompany::class, 'companyID');
+    }
+    
 
 
 }

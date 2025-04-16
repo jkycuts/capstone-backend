@@ -38,8 +38,20 @@ use App\Http\Controllers\Auth\AnnualSummaryController;
          Route::put('/ghg-emission/{id}',        [GhgEmissionController::class, 'update']);
          Route::delete('/ghg-emission/{id}',     [GhgEmissionController::class, 'destroy']);
          Route::post('/companies',               [CompanyController::class, 'store']); // Assign company to user
-         Route::post('/plantation',              [CarbonSequestrationController::class, 'storePlantation']);
-         Route::post('/tree-growth',             [CarbonSequestrationController::class, 'storeTreeGrowth']);
+
+        // Plantation Routes
+        Route::get('/plantation',                [CarbonSequestrationController::class, 'index']);
+        Route::post('/plantation',               [CarbonSequestrationController::class, 'storePlantation']);
+    
+    // Tree Growth Routes
+        Route::get('/tree-growth/{id}',         [CarbonSequestrationController::class, 'show']);
+        Route::post('/tree-growth',             [CarbonSequestrationController::class, 'storeTreeGrowth']);
+        Route::post('/tree-growth/{id}',         [CarbonSequestrationController::class, 'updateTreeGrowth']);
+
+    // Carbon Sequestration Calculation
+        Route::get('/carbon-sequestration/{plantationId}', [CarbonSequestrationController::class, 'calculateCarbonSequestration']);
+
+        Route::get('/annual-summary/latest',    [AnnualSummaryController::class, 'latest']);
 
     // Admin APIs
     Route::controller(UserController::class)->group(function () {
@@ -61,18 +73,7 @@ use App\Http\Controllers\Auth\AnnualSummaryController;
     Route::get('/user/companies',    [CompanyController::class, 'show']); // Get user's company
 
     
-    // Tree Growth APIs
-   
-    Route::put('/tree-growth/{id}',                          [CarbonSequestrationController::class, 'updateTreeGrowth']);
-    Route::get('/carbon-sequestration/{plantationId}',      [CarbonSequestrationController::class, 'calculateCarbonSequestration']);
-
-   
-   
-
+    
     Route::resource('annual-summaries', AnnualSummaryController::class);
 
- 
-
-   
-    
 });

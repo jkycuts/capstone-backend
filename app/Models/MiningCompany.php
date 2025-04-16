@@ -22,6 +22,10 @@ class MiningCompany extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function users()
+    {
+        return $this->hasMany(User::class, 'company_id');
+    }
 
     protected $primaryKey = 'id';
 

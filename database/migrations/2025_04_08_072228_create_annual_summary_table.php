@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('annual_summary', function (Blueprint $table) {
             $table->id();
+            $table->string('company_name');
             $table->year('year');
             $table->decimal('annual_carbon_emission', 12, 4)->default(0);
             $table->decimal('annual_carbon_sequestration', 12, 4)->default(0);

@@ -19,7 +19,7 @@ return new class extends Migration
 
             // Fuel Consumption - Scope 1
             $table->string('fuel_source');
-            $table->enum('fuel_type', ['diesel', 'biodiesel', 'ethanol', 'gasoline'])->nullable();
+            $table->string('fuel_type');
             $table->decimal('fuel_liters_used', 10, 2)->nullable();
 
             // Purchased Electricity - Scope 2
@@ -30,8 +30,13 @@ return new class extends Migration
             $table->integer('travel_distance_miles')->nullable();
             $table->integer('travel_number_of_trips')->nullable();
 
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');  // Set up foreign key constraint
+            $table->date('date_recorded');  
 
+
+            // Add company_id column and define the foreign key
+            $table->unsignedBigInteger('company_id');
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            
             $table->timestamps();
         });
     }
