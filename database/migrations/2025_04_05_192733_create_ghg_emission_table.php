@@ -32,11 +32,13 @@ return new class extends Migration
 
             $table->date('date_recorded');  
 
-
             // Add company_id column and define the foreign key
             $table->unsignedBigInteger('company_id');
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             
+            // Indexes to optimize queries based on common filtering
+            $table->index(['company_id', 'year', 'quarter']);
+
             $table->timestamps();
         });
     }

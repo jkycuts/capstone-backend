@@ -49,7 +49,7 @@ class User extends Authenticatable
     
     public function company()
     {
-        return $this->belongsTo(MiningCompany::class, 'companyID');
+        return $this->belongsTo(MiningCompany::class, 'company_id');
     }
     
 

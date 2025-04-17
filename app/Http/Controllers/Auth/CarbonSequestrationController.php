@@ -76,53 +76,76 @@ class CarbonSequestrationController extends Controller
 
 
 
-    // Store tree growth data (updated to use selected plantation_id)
+    
+         // Store tree growth data (updated to use selected plantation_id)
     public function storeTreeGrowth(Request $request)
     {
+        // Validate incoming data
         $validated = $request->validate([
-            'species'           => 'required|string',
-            'dbh'               => 'required|numeric',
-            'height'            => 'required|numeric',
-            'geotag_photos'     => 'image|mimes:jpeg,png,jpg|max:5120',
-            'longitude'         => 'required|numeric',
-            'latitude'          => 'required|numeric',
-            'plantation_id'     => 'required|exists:plantation,id',
+            'species'               => 'required|string',
+            'dbh'                   => 'required|numeric',
+            'height'                => 'required|numeric',
+            'geotag_photos'         => 'image|mimes:jpeg,png,jpg|max:5120',
+            'longitude'             => 'required|numeric',
+            'latitude'              => 'required|numeric',
+            'plantation_id'         => 'required|exists:plantation,id',
         ], [
-            'dbh.required'    => 'Please provide the DBH (diameter at breast height).',
-            'height.required' => 'Please provide the tree height.',
+            'dbh.required'          => 'Please provide the DBH (diameter at breast height).',
+            'height.required'       => 'Please provide the tree height.',
+            'geotag_photos.image'   => 'The geotag photo must be an image file (jpeg, png, jpg).',
+            'geotag_photos.max'     => 'The geotag photo size must be less than 5MB.',
         ]);
 
+        // Check for authentication
         if (!auth()->check()) {
             return response()->json(['error' => 'User not authenticated'], 401);
         }
 
+        // Check if plantation exists
         $plantation = Plantation::find($request->plantation_id);
 
         if (!$plantation) {
             return response()->json(['error' => 'Invalid plantation selected'], 404);
         }
 
+        // Check if tree growth data already exists for this plantation and species
+        $existingTreeGrowth = TreeGrowth::where('plantation_id', $plantation->id)
+                                        ->where('species', $request->species)
+                                        ->first();
+
+        if ($existingTreeGrowth) {
+            return response()->json(['error' => 'Tree growth data for this species already exists for this plantation.'], 409);
+        }
+
+        // Handle the geotag photo upload
         $photoPath = null;
         if ($request->hasFile('geotag_photos')) {
             $photoPath = $request->file('geotag_photos')->store('geotag_photos', 'public');
         }
 
+        // Store tree growth data
         $treeGrowth = TreeGrowth::create([
-            'species'       => $request->species,
-            'dbh'           => $request->dbh,
-            'height'        => $request->height,
-            'geotag_photos' => $photoPath,
-            'longitude'     => $request->longitude,
-            'latitude'      => $request->latitude,
-            'plantation_id' => $plantation->id,
+            'species'           => $request->species,
+            'dbh'               => $request->dbh,
+            'height'            => $request->height,
+            'geotag_photos'     => $photoPath,
+            'longitude'         => $request->longitude,
+            'latitude'          => $request->latitude,
+            'plantation_id'     => $plantation->id,
         ]);
 
+        // Log clearing cache for related plantation carbon sequestration
         Log::info("Clearing cache for plantation: {$plantation->id}");
-
         Cache::forget("carbon_sequestration_plantation_{$plantation->id}");
 
-        return response()->json($treeGrowth, 201);
+        // Return a response with the created tree growth data
+        return response()->json([
+            'status'            => 'success',
+            'message'           => 'Tree growth data saved successfully.',
+            'data'              => $treeGrowth,
+        ], 201);
     }
+    
 
     public function updateTreeGrowth(Request $request, $id) {
         $tree = TreeGrowth::find($id);
@@ -132,13 +155,14 @@ class CarbonSequestrationController extends Controller
         }
 
         $validated = $request->validate([
-            'dbh' => 'required|numeric|min:0',
-            'height' => 'required|numeric|min:0',
+            'dbh'           => 'required|numeric|min:0',
+            'height'        => 'required|numeric|min:0',
             'geotag_photos' => 'nullable|image|max:5120', // max 5MB
         ]);
 
-        $tree->dbh = $validated['dbh'];
-        $tree->height = $validated['height'];
+         // Update the tree growth data
+            $tree->dbh = $request->dbh;
+            $tree->height = $request->height;
 
         if ($request->hasFile('geotag_photos')) {
 

@@ -19,7 +19,7 @@ class Plantation extends Model
     }
 
     public function treeGrowth() {
-        return $this->hasMany(TreeGrowth::class);
+        return $this->hasMany(TreeGrowth::class, 'plantation_id');
     }
 
     protected $fillable = [

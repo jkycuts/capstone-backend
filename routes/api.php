@@ -51,7 +51,19 @@ use App\Http\Controllers\Auth\AnnualSummaryController;
     // Carbon Sequestration Calculation
         Route::get('/carbon-sequestration/{plantationId}', [CarbonSequestrationController::class, 'calculateCarbonSequestration']);
 
-        Route::get('/annual-summary/latest',    [AnnualSummaryController::class, 'latest']);
+        Route::get('/annual-summary/export/pdf/{year}', [AnnualSummaryController::class, 'exportPdfStatic'])->name('annual.summary.export.pdf');
+
+        Route::get('/annual-summary',                 [AnnualSummaryController::class, 'AnnualSummary']);
+
+        Route::post('/annual-summary/generate', [AnnualSummaryController::class, 'generate'])
+                ->middleware('auth')
+                ->name('annual-summary.generate');
+    
+        
+
+        Route::get('/calculate-annual-emissions/{year}', [CarbonSequestrationController::class, 'calculateAnnualEmissions']);
+
+    
 
     // Admin APIs
     Route::controller(UserController::class)->group(function () {
