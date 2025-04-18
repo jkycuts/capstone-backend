@@ -15,17 +15,21 @@ class AnnualSummary extends Model
     protected $fillable = [
         'year',
         'company_id',
-        'company_name',
-        'total_emission',
-        'total_sequestration',
-        'carbon_variance',
-        'ghg_contribution_percent',
+        'fuel_tco2',
+        'electricity_tco2',
+        'travel_tco2',
+        'total_tco2' ,
+        'carbon_sequestered_tco2',
+        'carbon_neutrality_variance' ,
+        'ghg_country_percent',
     ];
 
     public function company()
     {
-        return $this->belongsTo(MiningCompany::class);
+        return $this->belongsTo(MiningCompany::class, 'company_id');
     }
+
+
 
 
     protected $casts = [

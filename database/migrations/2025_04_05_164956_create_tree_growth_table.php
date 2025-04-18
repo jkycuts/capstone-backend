@@ -18,8 +18,8 @@ return new class extends Migration
             $table->float('dbh'); // diameter at breast height (in cm)
             $table->float('height');
             $table->string('geotag_photos')->nullable();   // to store geotagged photo information
-            $table->float('longitude');
-            $table->float('latitude');
+            $table->decimal('longitude', 9, 6); 
+            $table->decimal('latitude', 9, 6);
             $table->timestamps();
 
             

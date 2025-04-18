@@ -27,10 +27,18 @@ class MiningCompany extends Model
         return $this->hasMany(User::class, 'company_id');
     }
 
+    public function AnnualSummary()
+    {
+        return $this->hasMany(AnnualSummary::class, 'company_id');
+    }
+
     public function ghgEmissions()
 {
     return $this->hasMany(GHGEmission::class);
 }
+
+
+
 
 public function carbonSequestrations() {
     return $this->hasMany(CarbonSequestration::class);

@@ -51,13 +51,14 @@ use App\Http\Controllers\Auth\AnnualSummaryController;
     // Carbon Sequestration Calculation
         Route::get('/carbon-sequestration/{plantationId}', [CarbonSequestrationController::class, 'calculateCarbonSequestration']);
 
-        Route::get('/annual-summary/export/pdf/{year}', [AnnualSummaryController::class, 'exportPdfStatic'])->name('annual.summary.export.pdf');
+        Route::post('/annual-summary/auto', [AnnualSummaryController::class, 'storeAuto']);
+        Route::get('/annual-summary', [AnnualSummaryController::class, 'getByYear']);
 
-        Route::get('/annual-summary',                 [AnnualSummaryController::class, 'AnnualSummary']);
+        
+        Route::get('/annual-summary', [AnnualSummaryController::class, 'getAnnualSummary']);
 
-        Route::post('/annual-summary/generate', [AnnualSummaryController::class, 'generate'])
-                ->middleware('auth')
-                ->name('annual-summary.generate');
+
+
     
         
 

@@ -16,72 +16,109 @@ use App\Models\TreeGrowth;
 
 class AnnualSummaryController extends Controller
 {
-    // Fetch all annual summaries for the authenticated user's company
-    public function AnnualSummary(Request $request)
-    {
-        try {
-            $summaries = AnnualSummary::with('company')->get();
-    
-            return response()->json([
-                'success' => true,
-                'data' => $summaries
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Server error.',
-                'error' => $e->getMessage(),  // TEMPORARY: Remove this in production
-            ], 500);
-        }
-    }
 
-    // Generate annual summary for a given year
-    public function generate(Request $request)
+    public function getByYear(Request $request)
 {
-    $year = $request->input('year');
-    $companyId = Auth::user()->company_id;
+    try {
+        $year = $request->query('year');
 
-    // 1. Total Emissions for selected year and company
-    $totalEmissions = GHGEmission::where('company_id', $companyId)
-        ->where('year', $year)
-        ->sum('total_tco2');
+        $summaries = AnnualSummary::with('company')
+            ->when($year, function ($query) use ($year) {
+                return $query->where('year', $year);
+            })
+            ->get();
 
-    // 2. Fetch all plantations planted in or before the selected year
-    $plantations = Plantation::where('company_id', $companyId)
-        ->whereYear('date_recorded', '<=', $year)
-        ->pluck('id');
+        $mapped = $summaries->map(function ($item) {
+            return [
+                'year' => $item->year,
+                'company_name' => optional($item->company)->name ?? 'Unknown',
+                'total_tco2' => $item->total_tco2,
+                'carbon_sequestered_tco2' => $item->carbon_sequestered_tco2,
+                'carbon_neutrality_variance' => $item->carbon_neutrality_variance,
+                'ghg_country_percent' => $item->ghg_country_percent,
+            ];
+        });
 
-    // 3. Sum carbon sequestration from tree data for those plantations
-    // Ensure you're summing the correct column for sequestration (replace 'total_sequestration' with the correct field)
-    $totalSequestration = CarbonSequestration::whereIn('plantation_id', $plantations)
-        ->sum('co2_sequestered');  // Ensure this column is correct
-
-    // 4. Compute Carbon Variance (Sequestration minus Emissions)
-    $carbonVariance = $totalSequestration - $totalEmissions;
-
-    // 5. Percentage of national GHG emissions (fallback to avoid division by zero)
-    $nationalTotal = GHGEmission::where('year', $year)->sum('total_tco2') ?: 1;
-    $ghgContribution = ($totalEmissions / $nationalTotal) * 100;
-
-    // 6. Save or update annual summary
-    $summary = AnnualSummary::updateOrCreate(
-        ['year' => $year, 'company_id' => $companyId],
-        [
-            'annual_carbon_emission' => $totalEmissions,
-            'annual_carbon_sequestration' => $totalSequestration,
-            'carbon_neutrality_variance' => $carbonVariance,
-            'percentage_ghg_contribution' => $ghgContribution
-        ]
-    );
-
-    Log::info('Generated Summary: ', ['summary' => $summary]);
+        return response()->json($mapped);
+    } catch (\Exception $e) {
+        Log::error("Annual Summary API Error: " . $e->getMessage(), [
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json(['error' => 'Server error'], 500);
+    }
+    
+}
 
 
-    return response()->json([
-        'message' => 'Annual summary generated successfully.',
-        'data' => $summary
-    ]);
+public function getQuarterlySummary(Request $request)
+{
+    try {
+        $year = $request->query('year');
+        $quarter = $request->query('quarter'); // Quarter input (Q1, Q2, Q3, Q4)
+
+        // Define the start and end months for each quarter
+        $quarters = [
+            'Q1' => ['01', '03'], // January to March
+            'Q2' => ['04', '06'], // April to June
+            'Q3' => ['07', '09'], // July to September
+            'Q4' => ['10', '12'], // October to December
+        ];
+
+        // Ensure a valid quarter is passed
+        if (!isset($quarters[$quarter])) {
+            return response()->json(['error' => 'Invalid quarter specified'], 400);
+        }
+
+        // Get the months for the selected quarter
+        list($startMonth, $endMonth) = $quarters[$quarter];
+
+        // Fetch the summary data for the selected year and quarter
+        $summaries = AnnualSummary::with('company')
+            ->where('year', $year)
+            ->whereBetween(DB::raw('MONTH(created_at)'), [$startMonth, $endMonth])
+            ->get();
+
+        // Aggregate the results by summing the values
+        $aggregatedSummary = $summaries->reduce(function ($carry, $item) {
+            $carry['total_tco2'] += $item->total_tco2;
+            $carry['carbon_sequestered_tco2'] += $item->carbon_sequestered_tco2;
+            $carry['carbon_neutrality_variance'] += $item->carbon_neutrality_variance;
+            $carry['ghg_country_percent'] += $item->ghg_country_percent;
+
+            return $carry;
+        }, [
+            'total_tco2' => 0,
+            'carbon_sequestered_tco2' => 0,
+            'carbon_neutrality_variance' => 0,
+            'ghg_country_percent' => 0,
+        ]);
+
+        // Format the final response to return aggregated data
+        $aggregatedSummary['year'] = $year;
+        $aggregatedSummary['quarter'] = $quarter;
+        $aggregatedSummary['company_name'] = 'Aggregated Data'; // Or any logic to show a specific company
+
+        return response()->json($aggregatedSummary);
+    } catch (\Exception $e) {
+        Log::error("Annual Summary API Error: " . $e->getMessage(), [
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json(['error' => 'Server error'], 500);
+    }
+}
+
+
+public function getAnnualSummary(Request $request)
+{
+    $year = $request->query('year');
+
+    // Fetch the data for the selected year
+    $summary = AnnualSummary::where('year', $year)->get();
+
+    return response()->json($summary);
 }
 
     
-}
+    
+    
+    }

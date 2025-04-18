@@ -20,16 +20,16 @@ class CarbonSequestrationController extends Controller
         }
 
         $companyId = auth()->user()->company_id;
-        $plantation = Plantation::where('company_id', $companyId)->get();
+        $plantations = Plantation::where('company_id', $companyId)->get();
 
-        return response()->json($plantation);
+        return response()->json($plantations);
     }
 
     // Show create view for tree growth data
     public function create()
     {
-        $plantation = Plantation::all(); // Get all plantations
-        return view('tree-growth.create', compact('plantation'));
+        $plantations = Plantation::all();
+        return view('tree-growth.create', compact('plantations'));
     }
 
     // Store plantation data
@@ -39,7 +39,7 @@ class CarbonSequestrationController extends Controller
             'area_planted'      => 'required|numeric',
             'seedlings_planted' => 'required|integer',
             'plantation_age'    => 'required|integer',
-            'date_recorded'    => 'nullable|date',
+            'date_recorded'     => 'nullable|date',
         ]);
 
         if (!auth()->check()) {
@@ -50,10 +50,10 @@ class CarbonSequestrationController extends Controller
         $companyId = auth()->user()->company_id;
 
         $plantation = Plantation::create([
-            'area_planted'      => $request->area_planted,
-            'seedlings_planted' => $request->seedlings_planted,
-            'plantation_age'    => $request->plantation_age,
-            'date_recorded'     => $request->date_recorded,
+            'area_planted'      => $validated['area_planted'],
+            'seedlings_planted' => $validated['seedlings_planted'],
+            'plantation_age'    => $validated['plantation_age'],
+            'date_recorded'     => $validated['date_recorded'],
             'user_id'           => $userId,
             'company_id'        => $companyId,
         ]);
@@ -61,8 +61,7 @@ class CarbonSequestrationController extends Controller
         return response()->json($plantation, 201);
     }
 
-
-    // GET /api/tree-growth/{id}
+    // Show single tree growth data
     public function show($id)
     {
         $tree = TreeGrowth::find($id);
@@ -74,80 +73,70 @@ class CarbonSequestrationController extends Controller
         return response()->json($tree);
     }
 
-
-
-    
-         // Store tree growth data (updated to use selected plantation_id)
+    // Store tree growth data
     public function storeTreeGrowth(Request $request)
     {
-        // Validate incoming data
         $validated = $request->validate([
-            'species'               => 'required|string',
-            'dbh'                   => 'required|numeric',
-            'height'                => 'required|numeric',
-            'geotag_photos'         => 'image|mimes:jpeg,png,jpg|max:5120',
-            'longitude'             => 'required|numeric',
-            'latitude'              => 'required|numeric',
-            'plantation_id'         => 'required|exists:plantation,id',
+            'species'       => 'required|string',
+            'dbh'           => 'required|numeric',
+            'height'        => 'required|numeric',
+            'geotag_photos' => 'image|mimes:jpeg,png,jpg|max:5120',
+            'longitude'     => 'required|numeric',
+            'latitude'      => 'required|numeric',
+            'plantation_id' => 'required|exists:plantation,id',
         ], [
-            'dbh.required'          => 'Please provide the DBH (diameter at breast height).',
-            'height.required'       => 'Please provide the tree height.',
-            'geotag_photos.image'   => 'The geotag photo must be an image file (jpeg, png, jpg).',
-            'geotag_photos.max'     => 'The geotag photo size must be less than 5MB.',
+            'dbh.required' => 'Please provide the DBH.',
+            'height.required' => 'Please provide the height.',
+            'geotag_photos.image' => 'The photo must be an image.',
+            'geotag_photos.max' => 'The photo must not exceed 5MB.',
         ]);
 
-        // Check for authentication
         if (!auth()->check()) {
             return response()->json(['error' => 'User not authenticated'], 401);
         }
 
-        // Check if plantation exists
         $plantation = Plantation::find($request->plantation_id);
 
         if (!$plantation) {
             return response()->json(['error' => 'Invalid plantation selected'], 404);
         }
 
-        // Check if tree growth data already exists for this plantation and species
-        $existingTreeGrowth = TreeGrowth::where('plantation_id', $plantation->id)
-                                        ->where('species', $request->species)
-                                        ->first();
+        $existingTree = TreeGrowth::where('plantation_id', $plantation->id)
+            ->where('species', $request->species)
+            ->first();
 
-        if ($existingTreeGrowth) {
-            return response()->json(['error' => 'Tree growth data for this species already exists for this plantation.'], 409);
+        if ($existingTree) {
+            return response()->json(['error' => 'Tree data for this species already exists.'], 409);
         }
 
-        // Handle the geotag photo upload
         $photoPath = null;
         if ($request->hasFile('geotag_photos')) {
             $photoPath = $request->file('geotag_photos')->store('geotag_photos', 'public');
         }
 
-        // Store tree growth data
         $treeGrowth = TreeGrowth::create([
-            'species'           => $request->species,
-            'dbh'               => $request->dbh,
-            'height'            => $request->height,
-            'geotag_photos'     => $photoPath,
-            'longitude'         => $request->longitude,
-            'latitude'          => $request->latitude,
-            'plantation_id'     => $plantation->id,
+            'species'       => $request->species,
+            'dbh'           => $request->dbh,
+            'height'        => $request->height,
+            'geotag_photos' => $photoPath,
+            'longitude'     => $request->longitude,
+            'latitude'      => $request->latitude,
+            'plantation_id' => $plantation->id,
         ]);
 
-        // Log clearing cache for related plantation carbon sequestration
-        Log::info("Clearing cache for plantation: {$plantation->id}");
         Cache::forget("carbon_sequestration_plantation_{$plantation->id}");
+        Log::info("Cache cleared for plantation: {$plantation->id}");
 
-        // Return a response with the created tree growth data
         return response()->json([
-            'status'            => 'success',
-            'message'           => 'Tree growth data saved successfully.',
-            'data'              => $treeGrowth,
+            'status'  => 'success',
+            'message' => 'Tree growth data saved.',
+            'data'    => $treeGrowth,
         ], 201);
     }
-    
 
-    public function updateTreeGrowth(Request $request, $id) {
+    // Update tree growth data
+    public function updateTreeGrowth(Request $request, $id)
+    {
         $tree = TreeGrowth::find($id);
 
         if (!$tree) {
@@ -157,16 +146,13 @@ class CarbonSequestrationController extends Controller
         $validated = $request->validate([
             'dbh'           => 'required|numeric|min:0',
             'height'        => 'required|numeric|min:0',
-            'geotag_photos' => 'nullable|image|max:5120', // max 5MB
+            'geotag_photos' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-         // Update the tree growth data
-            $tree->dbh = $request->dbh;
-            $tree->height = $request->height;
+        $tree->dbh = $request->dbh;
+        $tree->height = $request->height;
 
         if ($request->hasFile('geotag_photos')) {
-
-            // Delete old photo if needed
             if ($tree->geotag_photos && Storage::disk('public')->exists($tree->geotag_photos)) {
                 Storage::disk('public')->delete($tree->geotag_photos);
             }
@@ -175,13 +161,13 @@ class CarbonSequestrationController extends Controller
             $tree->geotag_photos = $photoPath;
         }
 
+        Cache::forget("carbon_sequestration_plantation_{$tree->plantation_id}");
         $tree->save();
 
         return response()->json(['message' => 'Tree data updated successfully', 'data' => $tree]);
     }
-    
 
-    // Calculate and cache carbon sequestration for a plantation
+    // Calculate carbon sequestration
     public function calculateCarbonSequestration($plantationId)
     {
         $cacheKey = "carbon_sequestration_plantation_{$plantationId}";
@@ -197,55 +183,44 @@ class CarbonSequestrationController extends Controller
 
         $trees = TreeGrowth::where('plantation_id', $plantationId)->get();
         if ($trees->isEmpty()) {
-            return response()->json(['error' => 'No trees found for this plantation'], 404);
+            return response()->json(['error' => 'No tree data found for this plantation'], 404);
         }
 
-        $totalCarbonSequestration = 0;
-        $totalCarbonSequestrationInTons = 0;
-        $treeCarbonData = [];
+        $totalCarbon = 0;
+        $totalCarbonTon = 0;
+        $treeDetails = [];
 
         foreach ($trees as $tree) {
-            // Step 1: Above Ground Biomass (AGB)
             $AGB = 34.4703 - (8.0671 * $tree->dbh) + (0.6589 * pow($tree->dbh, 2));
-
-            // Step 2: Below Ground Biomass (15% of AGB)
             $BGB = $AGB * 0.15;
+            $biomass = $AGB + $BGB;
+            $carbon = $biomass * 0.5;
+            $co2 = $carbon * 3.67;
+            $co2_ton = $co2 / 1000;
 
-            // Step 3: Total Biomass
-            $totalBiomass = $AGB + $BGB;
+            $totalCarbon += $co2;
+            $totalCarbonTon += $co2_ton;
 
-            // Step 4: Carbon Content (50% of Biomass)
-            $carbonContent = $totalBiomass * 0.5;
-
-            // Step 5: CO₂ Sequestration (Carbon * 3.67)
-            $CO2Sequestration = $carbonContent * 3.67;
-
-            // Step 6: Convert to tons
-            $CO2Sequestration_in_ton = $CO2Sequestration / 1000;
-
-            $totalCarbonSequestration += $CO2Sequestration;
-            $totalCarbonSequestrationInTons += $CO2Sequestration_in_ton;
-
-            $treeCarbonData[] = [
+            $treeDetails[] = [
                 'tree_id'               => $tree->id,
                 'species'               => $tree->species,
                 'dbh'                   => $tree->dbh,
                 'height'                => $tree->height,
                 'AGB_kg'                => round($AGB, 2),
                 'BGB_kg'                => round($BGB, 2),
-                'total_biomass_kg'      => round($totalBiomass, 2),
-                'carbon_content_kg'     => round($carbonContent, 2),
-                'CO2_sequestration_kg'  => round($CO2Sequestration, 2),
-                'CO2_sequestration_ton' => round($CO2Sequestration_in_ton, 2),
+                'total_biomass_kg'      => round($biomass, 2),
+                'carbon_content_kg'     => round($carbon, 2),
+                'CO2_sequestration_kg'  => round($co2, 2),
+                'CO2_sequestration_ton' => round($co2_ton, 2),
             ];
         }
 
         $result = [
             'plantation_id'                   => $plantationId,
             'number_of_trees'                 => count($trees),
-            'total_carbon_sequestration_kg'   => round($totalCarbonSequestration, 2),
-            'total_carbon_sequestration_ton'  => round($totalCarbonSequestrationInTons, 2),
-            'tree_sequestration_details'      => $treeCarbonData,
+            'total_carbon_sequestration_kg'   => round($totalCarbon, 2),
+            'total_carbon_sequestration_ton'  => round($totalCarbonTon, 2),
+            'tree_sequestration_details'      => $treeDetails,
         ];
 
         Cache::put($cacheKey, $result, now()->addHours(24));
