@@ -17,106 +17,48 @@ use App\Models\TreeGrowth;
 class AnnualSummaryController extends Controller
 {
 
-    public function getByYear(Request $request)
+    // In DashboardController.php
+public function fetchDashboardData()
 {
-    try {
-        $year = $request->query('year');
+    $companyId = auth()->user()->company_id;
 
-        $summaries = AnnualSummary::with('company')
-            ->when($year, function ($query) use ($year) {
-                return $query->where('year', $year);
-            })
-            ->get();
+    // GHG Emissions
+    $totalEmission = DB::table('ghg_emission')
+        ->where('company_id', $companyId)
+        ->sum('total_tco2');
 
-        $mapped = $summaries->map(function ($item) {
-            return [
-                'year' => $item->year,
-                'company_name' => optional($item->company)->name ?? 'Unknown',
-                'total_tco2' => $item->total_tco2,
-                'carbon_sequestered_tco2' => $item->carbon_sequestered_tco2,
-                'carbon_neutrality_variance' => $item->carbon_neutrality_variance,
-                'ghg_country_percent' => $item->ghg_country_percent,
-            ];
-        });
+    // Carbon Sequestration
+    $plantationIds = Plantation::where('company_id', $companyId)->pluck('id');
+    $totalSequestrationKg = 0;
 
-        return response()->json($mapped);
-    } catch (\Exception $e) {
-        Log::error("Annual Summary API Error: " . $e->getMessage(), [
-            'trace' => $e->getTraceAsString()
-        ]);
-        return response()->json(['error' => 'Server error'], 500);
-    }
-    
-}
-
-
-public function getQuarterlySummary(Request $request)
-{
-    try {
-        $year = $request->query('year');
-        $quarter = $request->query('quarter'); // Quarter input (Q1, Q2, Q3, Q4)
-
-        // Define the start and end months for each quarter
-        $quarters = [
-            'Q1' => ['01', '03'], // January to March
-            'Q2' => ['04', '06'], // April to June
-            'Q3' => ['07', '09'], // July to September
-            'Q4' => ['10', '12'], // October to December
-        ];
-
-        // Ensure a valid quarter is passed
-        if (!isset($quarters[$quarter])) {
-            return response()->json(['error' => 'Invalid quarter specified'], 400);
+    foreach ($plantationIds as $pid) {
+        $trees = TreeGrowth::where('plantation_id', $pid)->get();
+        foreach ($trees as $tree) {
+            $AGB = 34.4703 - (8.0671 * $tree->dbh) + (0.6589 * pow($tree->dbh, 2));
+            $BGB = $AGB * 0.15;
+            $biomass = $AGB + $BGB;
+            $carbon = $biomass * 0.5;
+            $co2 = $carbon * 3.67;
+            $totalSequestrationKg += $co2;
         }
-
-        // Get the months for the selected quarter
-        list($startMonth, $endMonth) = $quarters[$quarter];
-
-        // Fetch the summary data for the selected year and quarter
-        $summaries = AnnualSummary::with('company')
-            ->where('year', $year)
-            ->whereBetween(DB::raw('MONTH(created_at)'), [$startMonth, $endMonth])
-            ->get();
-
-        // Aggregate the results by summing the values
-        $aggregatedSummary = $summaries->reduce(function ($carry, $item) {
-            $carry['total_tco2'] += $item->total_tco2;
-            $carry['carbon_sequestered_tco2'] += $item->carbon_sequestered_tco2;
-            $carry['carbon_neutrality_variance'] += $item->carbon_neutrality_variance;
-            $carry['ghg_country_percent'] += $item->ghg_country_percent;
-
-            return $carry;
-        }, [
-            'total_tco2' => 0,
-            'carbon_sequestered_tco2' => 0,
-            'carbon_neutrality_variance' => 0,
-            'ghg_country_percent' => 0,
-        ]);
-
-        // Format the final response to return aggregated data
-        $aggregatedSummary['year'] = $year;
-        $aggregatedSummary['quarter'] = $quarter;
-        $aggregatedSummary['company_name'] = 'Aggregated Data'; // Or any logic to show a specific company
-
-        return response()->json($aggregatedSummary);
-    } catch (\Exception $e) {
-        Log::error("Annual Summary API Error: " . $e->getMessage(), [
-            'trace' => $e->getTraceAsString()
-        ]);
-        return response()->json(['error' => 'Server error'], 500);
     }
+
+    $totalSequestrationTon = $totalSequestrationKg / 1000;
+    $carbonVariance = $totalSequestrationTon - $totalEmission;
+
+    $nationalGHG = 100000; // placeholder
+    $percentageContribution = $nationalGHG > 0
+        ? ($totalEmission / $nationalGHG) * 100
+        : 0;
+
+    return response()->json([
+        'total_emission' => round($totalEmission, 2),
+        'total_sequestration' => round($totalSequestrationTon, 2),
+        'carbon_variance' => round($carbonVariance, 2),
+        'percentage_contribution' => round($percentageContribution, 2),
+    ]);
 }
 
-
-public function getAnnualSummary(Request $request)
-{
-    $year = $request->query('year');
-
-    // Fetch the data for the selected year
-    $summary = AnnualSummary::where('year', $year)->get();
-
-    return response()->json($summary);
-}
 
     
     

@@ -149,6 +149,10 @@ class GHGEmissionController extends Controller
             $ghg->total_tco2 = $fuel_total + $electricity_total + $travel_total;
             $ghg->date_recorded = $request->date_recorded;
 
+            $total_tco2 = GHGEmission::where('company_id', Auth::user()->company_id)
+                    ->sum('total_tco2');
+
+
             // If user is authenticated, assign company ID
             if (Auth::check()) {
                 $ghg->company_id = Auth::user()->company_id;

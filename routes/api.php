@@ -50,17 +50,8 @@ use App\Http\Controllers\Auth\AnnualSummaryController;
 
     // Carbon Sequestration Calculation
         Route::get('/carbon-sequestration/{plantationId}', [CarbonSequestrationController::class, 'calculateCarbonSequestration']);
-
-        Route::post('/annual-summary/auto', [AnnualSummaryController::class, 'storeAuto']);
-        Route::get('/annual-summary', [AnnualSummaryController::class, 'getByYear']);
-
-        
-        Route::get('/annual-summary', [AnnualSummaryController::class, 'getAnnualSummary']);
-
-
-
-    
-        
+       
+        Route::get('/dashboard-summary', [AnnualSummaryController::class, 'fetchDashboardData']);
 
         Route::get('/calculate-annual-emissions/{year}', [CarbonSequestrationController::class, 'calculateAnnualEmissions']);
 
