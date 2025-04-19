@@ -28,7 +28,6 @@ return new class extends Migration
             // Business Travel - Scope 3
             $table->enum('travel_category', ['short', 'medium', 'long', 'unknown'])->nullable();
             $table->integer('travel_distance_miles')->nullable();
-            $table->integer('travel_number_of_trips')->nullable();
 
             $table->date('date_recorded');  
 

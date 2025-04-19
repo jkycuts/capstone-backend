@@ -75,97 +75,69 @@ class CarbonSequestrationController extends Controller
 
     // Store tree growth data
     public function storeTreeGrowth(Request $request)
-    {
-        $validated = $request->validate([
-            'species'       => 'required|string',
-            'dbh'           => 'required|numeric',
-            'height'        => 'required|numeric',
-            'geotag_photos' => 'image|mimes:jpeg,png,jpg|max:5120',
-            'longitude'     => 'required|numeric',
-            'latitude'      => 'required|numeric',
-            'plantation_id' => 'required|exists:plantation,id',
-        ], [
-            'dbh.required' => 'Please provide the DBH.',
-            'height.required' => 'Please provide the height.',
-            'geotag_photos.image' => 'The photo must be an image.',
-            'geotag_photos.max' => 'The photo must not exceed 5MB.',
-        ]);
+{
+    $validated = $request->validate([
+        'species'       => 'required|string',
+        'dbh'           => 'required|numeric|min:0.1|max:200',
+        'height'        => 'required|numeric|min:0.1|max:100',
+        'geotag_photos' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+        'latitude'      => 'required|numeric|between:-90,90',
+        'longitude'     => 'required|numeric|between:-180,180',
+        'plantation_id' => 'required|exists:plantation,id',
+    ], [
+        'dbh.required' => 'Please provide the DBH.',
+        'height.required' => 'Please provide the height.',
+        'geotag_photos.image' => 'The photo must be an image.',
+        'geotag_photos.max' => 'The photo must not exceed 5MB.',
+    ]);
 
-        if (!auth()->check()) {
-            return response()->json(['error' => 'User not authenticated'], 401);
-        }
-
-        $plantation = Plantation::find($request->plantation_id);
-
-        if (!$plantation) {
-            return response()->json(['error' => 'Invalid plantation selected'], 404);
-        }
-
-        $existingTree = TreeGrowth::where('plantation_id', $plantation->id)
-            ->where('species', $request->species)
-            ->first();
-
-        if ($existingTree) {
-            return response()->json(['error' => 'Tree data for this species already exists.'], 409);
-        }
-
-        $photoPath = null;
-        if ($request->hasFile('geotag_photos')) {
-            $photoPath = $request->file('geotag_photos')->store('geotag_photos', 'public');
-        }
-
-        $treeGrowth = TreeGrowth::create([
-            'species'       => $request->species,
-            'dbh'           => $request->dbh,
-            'height'        => $request->height,
-            'geotag_photos' => $photoPath,
-            'longitude'     => $request->longitude,
-            'latitude'      => $request->latitude,
-            'plantation_id' => $plantation->id,
-        ]);
-
-        Cache::forget("carbon_sequestration_plantation_{$plantation->id}");
-        Log::info("Cache cleared for plantation: {$plantation->id}");
-
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'Tree growth data saved.',
-            'data'    => $treeGrowth,
-        ], 201);
+    if (!auth()->check()) {
+        return response()->json(['error' => 'User not authenticated'], 401);
     }
 
-    // Update tree growth data
-    public function updateTreeGrowth(Request $request, $id)
-    {
-        $tree = TreeGrowth::find($id);
+    $plantation = Plantation::find($request->plantation_id);
 
-        if (!$tree) {
-            return response()->json(['message' => 'Tree not found'], 404);
-        }
-
-        $validated = $request->validate([
-            'dbh'           => 'required|numeric|min:0',
-            'height'        => 'required|numeric|min:0',
-            'geotag_photos' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
-        ]);
-
-        $tree->dbh = $request->dbh;
-        $tree->height = $request->height;
-
-        if ($request->hasFile('geotag_photos')) {
-            if ($tree->geotag_photos && Storage::disk('public')->exists($tree->geotag_photos)) {
-                Storage::disk('public')->delete($tree->geotag_photos);
-            }
-
-            $photoPath = $request->file('geotag_photos')->store('tree_photos', 'public');
-            $tree->geotag_photos = $photoPath;
-        }
-
-        Cache::forget("carbon_sequestration_plantation_{$tree->plantation_id}");
-        $tree->save();
-
-        return response()->json(['message' => 'Tree data updated successfully', 'data' => $tree]);
+    if (!$plantation) {
+        return response()->json(['error' => 'Invalid plantation selected'], 404);
     }
+
+    // Check for exact duplicate entry (species, dbh, height, lat, long, plantation)
+    $duplicate = TreeGrowth::where('species', $request->species)
+        ->where('dbh', $request->dbh)
+        ->where('height', $request->height)
+        ->where('latitude', $request->latitude)
+        ->where('longitude', $request->longitude)
+        ->where('plantation_id', $plantation->id)
+        ->first();
+
+    if ($duplicate) {
+        return response()->json(['error' => 'Duplicate tree entry already exists in this plantation.'], 409);
+    }
+
+    $photoPath = null;
+    if ($request->hasFile('geotag_photos')) {
+        $photoPath = $request->file('geotag_photos')->store('geotag_photos', 'public');
+    }
+
+    $treeGrowth = TreeGrowth::create([
+        'species'       => $request->species,
+        'dbh'           => $request->dbh,
+        'height'        => $request->height,
+        'geotag_photos' => $photoPath,
+        'longitude'     => $request->longitude,
+        'latitude'      => $request->latitude,
+        'plantation_id' => $plantation->id,
+    ]);
+
+    Cache::forget("carbon_sequestration_plantation_{$plantation->id}");
+    Log::info("Cache cleared for plantation: {$plantation->id}");
+
+    return response()->json([
+        'status'  => 'success',
+        'message' => 'Tree growth data saved.',
+        'data'    => $treeGrowth,
+    ], 201);
+}
 
     // Calculate carbon sequestration
     public function calculateCarbonSequestration($plantationId)

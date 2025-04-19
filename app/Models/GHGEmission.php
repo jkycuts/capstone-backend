@@ -28,7 +28,6 @@ class GhgEmission extends Model
         // Scope 3 - Business Travel
         'travel_category',
         'travel_distance_miles',
-        'travel_number_of_trips',
         'travel_co2_emission',
 
         // Emission totals
