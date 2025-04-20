@@ -11,6 +11,14 @@ class TreeGrowth extends Model
 
     protected $table = 'tree_growth'; 
 
+    protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'dbh' => 'float',
+        'height' => 'float',
+    ];
+    
+
     protected $fillable = [
         'species',
         'dbh',

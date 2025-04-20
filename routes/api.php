@@ -47,6 +47,7 @@ use App\Http\Controllers\Auth\AnnualSummaryController;
         Route::get('/tree-growth/{id}',         [CarbonSequestrationController::class, 'show']);
         Route::post('/tree-growth',             [CarbonSequestrationController::class, 'storeTreeGrowth']);
         Route::post('/tree-growth/{id}',         [CarbonSequestrationController::class, 'updateTreeGrowth']);
+        Route::get('/tree-growth',         [CarbonSequestrationController::class, 'indexTreeGrowth']);
 
     // Carbon Sequestration Calculation
         Route::get('/carbon-sequestration/{plantationId}', [CarbonSequestrationController::class, 'calculateCarbonSequestration']);

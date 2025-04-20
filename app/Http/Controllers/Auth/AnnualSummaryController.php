@@ -46,7 +46,7 @@ public function fetchDashboardData()
     $totalSequestrationTon = $totalSequestrationKg / 1000;
     $carbonVariance = $totalSequestrationTon - $totalEmission;
 
-    $nationalGHG = 100000; // placeholder
+    $nationalGHG = 256150000; // 256.15 million tonnes in CO₂ equivalent
     $percentageContribution = $nationalGHG > 0
         ? ($totalEmission / $nationalGHG) * 100
         : 0;

@@ -49,7 +49,12 @@ class User extends Authenticatable
     
     public function company()
     {
-        return $this->belongsTo(MiningCompany::class, 'company_id');
+        return $this->belongsTo(MiningCompany::class);
+    }
+
+    public function companys()
+    {
+        return $this->hasMany(User::class, 'company_id');
     }
     
 
