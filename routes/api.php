@@ -32,11 +32,11 @@ use App\Http\Controllers\Auth\AnnualSummaryController;
 // // Private APIs
     Route::middleware(['auth:sanctum'])->group(function () {
          Route::get('/logout',                   [AuthController::class, 'logout']);
-         Route::get('/ghg-emission',             [GhgEmissionController::class, 'index']);
-         Route::post('/ghg-emission',            [GhgEmissionController::class, 'store']);
-         Route::get('/ghg-emission/{id}',        [GhgEmissionController::class, 'show']);
-         Route::put('/ghg-emission/{id}',        [GhgEmissionController::class, 'update']);
-         Route::delete('/ghg-emission/{id}',     [GhgEmissionController::class, 'destroy']);
+        //  Route::get('/ghg-emission',             [GhgEmissionController::class, 'index']);
+        //  Route::post('/ghg-emission',            [GhgEmissionController::class, 'store']);
+        //  Route::get('/ghg-emission/{id}',        [GhgEmissionController::class, 'show']);
+        //  Route::put('/ghg-emission/{id}',        [GhgEmissionController::class, 'update']);
+        //  Route::delete('/ghg-emission/{id}',     [GhgEmissionController::class, 'destroy']);
          Route::post('/companies',               [CompanyController::class, 'store']); // Assign company to user
 
         // Plantation Routes
@@ -56,7 +56,22 @@ use App\Http\Controllers\Auth\AnnualSummaryController;
 
         Route::get('/calculate-annual-emissions/{year}', [CarbonSequestrationController::class, 'calculateAnnualEmissions']);
 
-    
+    // Scope 1 Emission
+        Route::post('/ghg-emission/fuel',                           [GhgEmissionController::class, 'storeScope1']);
+        Route::get('/ghg-emission/fuel',                                 [GhgEmissionController::class, 'getScope1Emissions']);
+
+    // Scope 2 Emission
+        Route::post('/ghg-emission/electricity',                        [GhgEmissionController::class, 'storeScope2Emission']);
+        Route::get('/ghg-emission/electricity',                         [GhgEmissionController::class, 'getScope2Emissions']);
+
+    // Scope 3 Emission
+        Route::post('ghg-emission/travel', [GHGEmissionController::class, 'storeScope3Emission']);
+
+        // Fetch all Scope 3 emissions for a specific company
+        Route::post('ghg-emission/travel', [GHGEmissionController::class, 'storeScope3Emission']);
+        Route::get('ghg-emission/travel', [GHGEmissionController::class, 'getScope3Emission']);
+
+
 
     // Admin APIs
     Route::controller(UserController::class)->group(function () {
