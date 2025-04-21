@@ -23,9 +23,23 @@ public function fetchDashboardData()
     $companyId = auth()->user()->company_id;
 
     // GHG Emissions
-    $totalEmission = DB::table('ghg_emission')
-        ->where('company_id', $companyId)
-        ->sum('total_tco2');
+   // Calculate Scope 1 Emissions 
+   $scope1Emission = DB::table('scope1')
+   ->where('company_id', $companyId)
+   ->sum('emission_tco2e'); // 
+
+// Calculate Scope 2 Emissions 
+$scope2Emission = DB::table('scope2_emission')
+   ->where('company_id', $companyId)
+   ->sum('emission_tco2e'); // Same for column name
+
+// Calculate Scope 3 Emissions 
+$scope3Emission = DB::table('scope3_emission')
+   ->where('company_id', $companyId)
+   ->sum('emission_tco2e'); // Same for column name
+
+// Calculate the total GHG emission by summing Scope 1, 2, and 3 emissions
+$totalEmission = $scope1Emission + $scope2Emission + $scope3Emission;
 
     // Carbon Sequestration
     $plantationIds = Plantation::where('company_id', $companyId)->pluck('id');
@@ -51,8 +65,15 @@ public function fetchDashboardData()
         ? ($totalEmission / $nationalGHG) * 100
         : 0;
 
+        Log::debug('Dashboard Data:', [
+            'totalEmission' => round($totalEmission, 2),
+            'total_sequestration' => round($totalSequestrationTon, 2),
+            'carbon_variance' => round($carbonVariance, 2),
+            'percentage_contribution' => round($percentageContribution, 2),
+        ]);
+
     return response()->json([
-        'total_emission' => round($totalEmission, 2),
+        'totalEmission' => round($totalEmission, 2),
         'total_sequestration' => round($totalSequestrationTon, 2),
         'carbon_variance' => round($carbonVariance, 2),
         'percentage_contribution' => round($percentageContribution, 2),

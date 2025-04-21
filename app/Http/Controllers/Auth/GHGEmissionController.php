@@ -22,11 +22,15 @@ class GHGEmissionController extends Controller
     // Backend (Laravel Controller)
 public function getScope1Emissions()
 {
+    
     $user = Auth::user();
     $emissions = Scope1Emission::where('company_id', $user->company_id)->get();
 
     return response()->json($emissions); // 👈 Make sure this returns the full record
+
 }
+    
+
 
 
    
@@ -37,7 +41,7 @@ public function getScope1Emissions()
             'year'                      => 'required|integer',
             'parameter'                 => 'required|string',
             'fuel_type'                 => 'required|string',
-            'fuel_liters_used'          => 'required|numeric|min:0',
+            'fuel_liters_used'          => 'required|numerical|min:0',
         ]);
     
         // Emission factors and GWP
@@ -143,14 +147,34 @@ public function storeScope3Emission(Request $request)
 
     $companyId = auth()->user()->company_id;
 
-    $emissionFactors = [
-        'short' => 0.21,
-        'medium' => 0.14,
-        'long' => 0.11,
+    $gwp = [
+        'co2' => 1,     // Global Warming Potential for CO₂
+        'ch4' => 21,    // GWP for CH₄
+        'n2o' => 310    // GWP for N₂O
     ];
 
-    $factor = $emissionFactors[$validated['travel_type']] ?? 0;
-    $total_emissions = $validated['travel_distance_miles'] * $factor;
+    // Business travel emissions (Scope 3)
+$activity_data = $request->travel_distance_miles;
+
+// Determine CO₂ emission factor based on travel distance
+if ($activity_data <= 300) {
+    $co2_factor = 0.277; // Short haul
+    $travel_category = 'short';
+} elseif ($activity_data > 300 && $activity_data <= 700) {
+    $co2_factor = 0.229; // Medium haul
+       $travel_category = 'medium';
+} else {
+    $co2_factor = 0.185; // Long haul
+    $travel_category = 'long';
+}
+
+// Apply GWP values (assumed passed or defined earlier)
+$travel_co2 = $activity_data * $co2_factor * $gwp['co2'];
+$travel_ch4 = $activity_data * 0.0000104 * $gwp['ch4'];
+$travel_n2o = $activity_data * 0.0000085 * $gwp['n2o'];
+
+$travel_total_kg = $travel_co2 + $travel_ch4 + $travel_n2o;
+$total_emissions = $travel_total_kg / 1000; // Convert kg to metric tons (tCO₂e)
 
     Scope3Emission::create([
         'company_id' => $companyId,
