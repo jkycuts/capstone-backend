@@ -13,6 +13,24 @@ use Illuminate\Support\Facades\Log;
 
 class CompanyController extends Controller
 {
+
+        // Laravel controller example
+public function show($id)
+{
+    $company = MiningCompany::find($id);
+
+    if (!$company) {
+        return response()->json(['message' => 'Company not found'], 404);
+    }
+
+    return response()->json($company);
+}
+
+
+
+
+
+
     public function store(CompanyRequest $request)
     {
         try {

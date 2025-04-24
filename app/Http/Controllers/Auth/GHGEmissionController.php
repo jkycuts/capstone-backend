@@ -41,7 +41,7 @@ public function getScope1Emissions()
             'year'                      => 'required|integer',
             'parameter'                 => 'required|string',
             'fuel_type'                 => 'required|string',
-            'fuel_liters_used'          => 'required|numerical|min:0',
+            'fuel_liters_used'          => 'required|numeric|min:0',
         ]);
     
         // Emission factors and GWP
@@ -187,7 +187,7 @@ $total_emissions = $travel_total_kg / 1000; // Convert kg to metric tons (tCO₂
     return response()->json(['message' => 'Scope 3 emissions stored successfully.']);
 
     $companyId = auth()->user()->company_id;
-Log::info('Company ID:', ['company_id' => $companyId]);
+    Log::info('Company ID:', ['company_id' => $companyId]);
 
 }
 

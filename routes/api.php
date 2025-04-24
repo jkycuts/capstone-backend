@@ -10,7 +10,7 @@ use App\Http\Controllers\auth\CompanyController;
 use App\Http\Controllers\Auth\CarbonSequestrationController;
 use App\Http\Controllers\Auth\GHGEmissionController;
 use App\Http\Controllers\Auth\AnnualSummaryController;
-
+use App\Http\Controllers\Auth\TreeGrowthController;
 
 
 
@@ -37,7 +37,10 @@ use App\Http\Controllers\Auth\AnnualSummaryController;
         //  Route::get('/ghg-emission/{id}',        [GhgEmissionController::class, 'show']);
         //  Route::put('/ghg-emission/{id}',        [GhgEmissionController::class, 'update']);
         //  Route::delete('/ghg-emission/{id}',     [GhgEmissionController::class, 'destroy']);
+
          Route::post('/companies',               [CompanyController::class, 'store']); // Assign company to user
+         Route::get('/companies/{id}',       [CompanyController::class, 'show']);
+
 
         // Plantation Routes
         Route::get('/plantation',                [CarbonSequestrationController::class, 'index']);
@@ -70,6 +73,9 @@ use App\Http\Controllers\Auth\AnnualSummaryController;
         // Fetch all Scope 3 emissions for a specific company
         Route::post('ghg-emission/travel', [GHGEmissionController::class, 'storeScope3Emission']);
         Route::get('ghg-emission/travel', [GHGEmissionController::class, 'getScope3Emission']);
+
+        Route::get('/simulate-growth/{treeId}', [TreeGrowthController::class, 'simulateTreeGrowth']);
+
 
 
 
