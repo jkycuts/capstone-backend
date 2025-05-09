@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\UserRequest;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -16,7 +17,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        return User::all();
+        return User::with('company')->get();
     }
 
     /**
@@ -26,7 +27,12 @@ class UserController extends Controller
     {
         $validated = $request->validated();
 
-        $validated['password'] = Hash::make($validated['password']);
+    $validated['password'] = Hash::make($validated['password']);
+
+        // Default to "user" role if not provided
+        if (!isset($validated['role'])) {
+        $validated['role'] = 'user';
+        }
 
         $user = User::create($validated);
 
@@ -121,4 +127,7 @@ class UserController extends Controller
 
         return $user;
     }
+
+    
+
 }

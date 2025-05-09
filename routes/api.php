@@ -11,6 +11,9 @@ use App\Http\Controllers\Auth\CarbonSequestrationController;
 use App\Http\Controllers\Auth\GHGEmissionController;
 use App\Http\Controllers\Auth\AnnualSummaryController;
 use App\Http\Controllers\Auth\TreeGrowthController;
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Middleware\CheckRole;
 
 
 
@@ -25,9 +28,23 @@ use App\Http\Controllers\Auth\TreeGrowthController;
 |
 */
 
+Route::middleware(['auth:api']) // Ensure the user is authenticated
+    ->get('/admin/some-action', [AdminController::class, 'someAdminAction']);
+
+    Route::middleware('auth')->get('/superadmin', [AdminController::class, 'index'])->name('admin.index');
+
+// Admin
+Route::middleware(['auth:sanctum', 'role:super_admin'])->group(function () {
+    Route::get('/superadmin/dashboard', [AdminController::class, 'index']);
+});
+
+
+
 // Public APIs
-    Route::post('/login',   [AuthController::class, 'login'])->name('user.login');
-    Route::post('/user',    [UserController::class, 'store'])->name('user.store');
+    Route::post('/user/login',      [AuthController::class, 'login'])->name('user.login');
+    Route::post('/user',            [UserController::class, 'store'])->name('user.store');
+    Route::post('/user/login',      [LoginController::class, 'superAdminLogin']);
+
 
 // // Private APIs
     Route::middleware(['auth:sanctum'])->group(function () {
@@ -37,6 +54,9 @@ use App\Http\Controllers\Auth\TreeGrowthController;
         //  Route::get('/ghg-emission/{id}',        [GhgEmissionController::class, 'show']);
         //  Route::put('/ghg-emission/{id}',        [GhgEmissionController::class, 'update']);
         //  Route::delete('/ghg-emission/{id}',     [GhgEmissionController::class, 'destroy']);
+
+        Route::get('/users/role/{role}', [UserController::class, 'usersByRole']);
+
 
          Route::post('/companies',               [CompanyController::class, 'store']); // Assign company to user
          Route::get('/companies/{id}',       [CompanyController::class, 'show']);

@@ -36,6 +36,9 @@ public function getScope1Emissions()
    
     public function storeScope1(Request $request)
     {
+
+        
+
         $validated = $request->validate([
             'quarter'                   => 'required|in:Q1,Q2,Q3,Q4',
             'year'                      => 'required|integer',
@@ -44,6 +47,12 @@ public function getScope1Emissions()
             'fuel_liters_used'          => 'required|numeric|min:0',
         ]);
     
+         // Convert to lowercase for calculation
+         $fuelKey = strtolower($validated['parameter']);
+
+         // Capitalize for saving to DB
+         $fuelTypeForDB = ucfirst($fuelKey);
+
         // Emission factors and GWP
         $emissionFactors = [
             'diesel'    => ['co2' => 2.712681, 'ch4' => 0.000143, 'n2o' => 0.000143],

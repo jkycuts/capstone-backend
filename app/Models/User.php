@@ -21,7 +21,9 @@ class User extends Authenticatable
         'firstname',
         'lastname',
         'email',
-        'password'
+        'password',
+        'company_id',
+        'role',
     ];
 
     /**
@@ -52,11 +54,13 @@ class User extends Authenticatable
         return $this->belongsTo(MiningCompany::class);
     }
 
-    public function companys()
-    {
-        return $this->hasMany(User::class, 'company_id');
-    }
-    
+   
+
+
+        public function isSuperAdmin()
+        {
+            return $this->role === 'super_admin';
+        }
 
 
 }

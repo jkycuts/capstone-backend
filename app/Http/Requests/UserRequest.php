@@ -29,10 +29,12 @@ class UserRequest extends FormRequest
             ];
         } else if (request()->routeIs('user.store')) {
             return [
-                'firstname'           => 'required|string|min:3',
-                'lastname'            => 'required|string|min:5',
-                'email'               => 'required|string|email|unique:App\Models\User,email|max:255',
-                'password'            => 'required|min:8|confirmed',
+                'firstname'     => 'required|string|max:255',
+                'lastname'      => 'required|string|max:255',
+                'email'         => 'required|email|unique:users,email,' . $this->id,
+                'password'      => $this->isMethod('post') ? 'required|min:8' : 'nullable|min:8',
+                'role'          => 'in:admin,user,agency',
+                'company_id'    => 'required|exists:mining_companies,id'
             ];
         } else if (request()->routeIs('user.update')) {
             return [
