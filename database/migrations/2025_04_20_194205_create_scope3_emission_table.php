@@ -13,10 +13,14 @@ return new class extends Migration
     {
         Schema::create('scope3_emission', function (Blueprint $table) {
             $table->id();
-            
+            $table->enum('mode', ['monthly', 'quarterly'])->nullable();
+            $table->enum('quarter', ['Q1', 'Q2', 'Q3', 'Q4'])->nullable();
+            $table->string('month')->nullable();
             $table->year('year');
             $table->enum('travel_type', ['short', 'medium', 'long'])->nullable();
             $table->integer('travel_distance_miles')->nullable();
+            $table->double('emission_factor')->nullable();
+            $table->double('gwp')->nullable();
             $table->decimal('emission_tco2e', 12, 4);
             $table->timestamps();
         

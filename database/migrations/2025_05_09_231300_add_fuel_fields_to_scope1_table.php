@@ -11,18 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('scope2_emission', function (Blueprint $table) {
-            $table->id();
+        Schema::table('scope1', function (Blueprint $table) {
             $table->enum('mode', ['monthly', 'quarterly'])->nullable();
-            $table->year('year');
             $table->string('month')->nullable();
+            $table->string('fuel_type')->nullable();
+            $table->double('fuel_liters_used')->nullable();
             $table->double('emission_factor')->nullable();
-            $table->enum('quarter', ['Q1', 'Q2', 'Q3', 'Q4'])->nullable();
-            $table->decimal('electricity_kwh', 12, 2);
-            $table->decimal('emission_tco2e', 12, 4);
-            $table->timestamps();
-
-            $table->foreignID('company_id')->references('id')->on('companies')->onDelete('cascade');
+            $table->double('gwp')->nullable();
         });
     }
 
@@ -31,6 +26,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('scope2_emission');
+        Schema::table('scope1', function (Blueprint $table) {
+            $table->dropColumn(['mode', 'month', 'fuel_type', 'fuel_liters_used', 'emission_factor', 'gwp']);
+        });
     }
 };

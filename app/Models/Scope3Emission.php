@@ -15,11 +15,15 @@ class Scope3Emission extends Model
      // The attributes that are mass assignable
      protected $fillable = [
         'company_id',
-         'year',
+        'year',
         'travel_type',
         'travel_distance_miles',
         'emission_tco2e',
-         
+         'emission_factor',
+         'gwp',
+         'month',
+         'mode',
+         'quarter',
      ];
  
      // Optionally define relationships to other models, if needed

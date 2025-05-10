@@ -14,10 +14,16 @@ class Scope1Emission extends Model
     protected $table = 'scope1';
 
     protected $fillable = [
-        'company_id',
-        'quarter',
+       'company_id',
         'year',
+        'mode',
+        'month',
+        'quarter',
         'parameter',
+        'fuel_type',
+        'fuel_liters_used',
+        'emission_factor',
+        'gwp',
         'emission_tco2e',
     ];
 

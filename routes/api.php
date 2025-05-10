@@ -80,8 +80,10 @@ Route::middleware(['auth:sanctum', 'role:super_admin'])->group(function () {
         Route::get('/calculate-annual-emissions/{year}', [CarbonSequestrationController::class, 'calculateAnnualEmissions']);
 
     // Scope 1 Emission
-        Route::post('/ghg-emission/fuel',                           [GhgEmissionController::class, 'storeScope1']);
-        Route::get('/ghg-emission/fuel',                                 [GhgEmissionController::class, 'getScope1Emissions']);
+        Route::post('/ghg-emission/fuel',                     [GhgEmissionController::class, 'storeScope1']);
+        Route::get('/ghg-emission/fuel',                      [GhgEmissionController::class, 'getScope1Emissions']);
+        Route::get('/ghg-emission/fuel/details',              [GHGEmissionController::class, 'scope1ReferenceDetails']);
+
 
     // Scope 2 Emission
         Route::post('/ghg-emission/electricity',                        [GhgEmissionController::class, 'storeScope2Emission']);

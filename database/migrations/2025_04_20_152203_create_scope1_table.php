@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('scope1', function (Blueprint $table) {
             $table->id();
             $table->year('year');
-            $table->enum('quarter', ['Q1', 'Q2', 'Q3', 'Q4']);
+            $table->enum('quarter', ['Q1', 'Q2', 'Q3', 'Q4'])->nullable();
             $table->String('parameter');
             $table->decimal('emission_tco2e', 12, 4);
             $table->timestamps();

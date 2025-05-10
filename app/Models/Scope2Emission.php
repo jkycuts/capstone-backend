@@ -14,9 +14,12 @@ class Scope2Emission extends Model
 
     protected $fillable = [
         'company_id',
+        'mode',
+        'month',
         'year',
         'quarter',   
-        'electricity_kwh',    
+        'electricity_kwh',  
+        'emission_factor',  
         'emission_tco2e',
     ];
 
