@@ -26,6 +26,7 @@ class TreeGrowth extends Model
         'geotag_photos',
         'latitude',
         'longitude',
+        'year_recorded',
         'plantation_id'
     ];
 

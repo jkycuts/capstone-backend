@@ -17,20 +17,13 @@ class MiningCompany extends Model
         'user_id'
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    
 
-    public function users()
-    {
-        return $this->hasMany(User::class, 'company_id');
-    }
+    public function annualSummaries()
+{
+    return $this->hasMany(AnnualSummary::class, 'company_id');
+}
 
-    public function AnnualSummary()
-    {
-        return $this->hasMany(AnnualSummary::class, 'company_id');
-    }
 
     public function ghgEmissions()
 {

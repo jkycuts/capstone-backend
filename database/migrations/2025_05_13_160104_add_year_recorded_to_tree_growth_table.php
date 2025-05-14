@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('annual_summary', function (Blueprint $table) {
-            $table->string('company_name')->nullable();
+        Schema::table('tree_growth', function (Blueprint $table) {
+            $table->year('year_recorded')->nullable()->after('plantation_id');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('annual_summary', function (Blueprint $table) {
-            $table->dropColumn('company_name');
+        Schema::table('tree_growth', function (Blueprint $table) {
+            //
         });
     }
 };

@@ -84,6 +84,7 @@ class CarbonSequestrationController extends Controller
         'latitude'      => 'required|numeric|between:-90,90',
         'longitude'     => 'required|numeric|between:-180,180',
         'plantation_id' => 'required|exists:plantation,id',
+        'year_recorded' => 'required|digits:4|integer|min:2000|max:' . date('Y'),
     ], [
         'dbh.required' => 'Please provide the DBH.',
         'height.required' => 'Please provide the height.',
@@ -107,7 +108,9 @@ class CarbonSequestrationController extends Controller
         ->where('height', $request->height)
         ->where('latitude', $request->latitude)
         ->where('longitude', $request->longitude)
+        ->where('year_recorded', $request->year_recorded)
         ->where('plantation_id', $plantation->id)
+        
         ->first();
 
     if ($duplicate) {
@@ -128,6 +131,7 @@ class CarbonSequestrationController extends Controller
         'geotag_photos' => $photoPath,
         'longitude'     => $request->longitude,
         'latitude'      => $request->latitude,
+        'year_recorded' => $request->year_recorded,
         'plantation_id' => $plantation->id,
     ]);
 
@@ -249,4 +253,22 @@ class CarbonSequestrationController extends Controller
     }
 
     
+    public function getTotalSequestration()
+{
+    try {
+        $totalKg = TreeGrowth::sum('CO2_sequestration');
+        $totalTCO2E = $totalKg / 1000;
+
+        return response()->json([
+            'total_carbon_sequestration_kg' => round($totalKg, 2),
+            'total_carbon_sequestration_tco2e' => round($totalTCO2E, 2)
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Failed to calculate total carbon sequestration.',
+            'details' => $e->getMessage()
+        ], 500);
+    }
+}
+
 }

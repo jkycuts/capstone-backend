@@ -12,7 +12,10 @@ use App\Models\CarbonSequestration;
 use App\Models\GhgEmission;
 use Illuminate\Support\Facades\DB;
 use App\Models\Plantation;
+use App\Models\Scope3Emission;
 use App\Models\TreeGrowth;
+use App\Models\Scope1Emission;
+use App\Models\Scope2Emission;
 
 class AnnualSummaryController extends Controller
 {
@@ -20,66 +23,41 @@ class AnnualSummaryController extends Controller
     // In DashboardController.php
 public function fetchDashboardData()
 {
-    $companyId = auth()->user()->company_id;
+    $user = Auth::user();
+        $companyId = $user->company_id;
 
-    // GHG Emissions
-   // Calculate Scope 1 Emissions 
-   $scope1Emission = DB::table('scope1')
-   ->where('company_id', $companyId)
-   ->sum('emission_tco2e'); // 
+        // Scope 1
+        $fuel = Scope1Emission::where('company_id', $companyId)->sum('emission_tco2e');
 
-// Calculate Scope 2 Emissions 
-$scope2Emission = DB::table('scope2_emission')
-   ->where('company_id', $companyId)
-   ->sum('emission_tco2e'); // Same for column name
+        // Scope 2
+        $electricity = Scope2Emission::where('company_id', $companyId)->sum('emission_tco2e');
 
-// Calculate Scope 3 Emissions 
-$scope3Emission = DB::table('scope3_emission')
-   ->where('company_id', $companyId)
-   ->sum('emission_tco2e'); // Same for column name
+        // Scope 3
+        $travel = Scope3Emission::where('company_id', $companyId)->sum('emission_tco2e');
+        
 
-// Calculate the total GHG emission by summing Scope 1, 2, and 3 emissions
-$totalEmission = $scope1Emission + $scope2Emission + $scope3Emission;
+        // Sum all emissions
+        $totalEmission = $fuel + $electricity + $travel ;
 
-    // Carbon Sequestration
-    $plantationIds = Plantation::where('company_id', $companyId)->pluck('id');
-    $totalSequestrationKg = 0;
+        // Carbon Sequestration from tree planting
+        $totalSequestration = TreeGrowth::where('plantation_id', $companyId)->sum('co2_sequestration');
 
-    foreach ($plantationIds as $pid) {
-        $trees = TreeGrowth::where('plantation_id', $pid)->get();
-        foreach ($trees as $tree) {
-            $AGB = 34.4703 - (8.0671 * $tree->dbh) + (0.6589 * pow($tree->dbh, 2));
-            $BGB = $AGB * 0.15;
-            $biomass = $AGB + $BGB;
-            $carbon = $biomass * 0.5;
-            $co2 = $carbon * 3.67;
-            $totalSequestrationKg += $co2;
-        }
-    }
+        // Carbon Neutrality Variance
+        $carbonVariance = $totalEmission - $totalSequestration;
 
-    $totalSequestrationTon = $totalSequestrationKg / 1000;
-    $carbonVariance = $totalSequestrationTon - $totalEmission;
+        // National contribution (static divisor or configurable later)
+        $nationalTotalGHG = 150000000; // Example: 150 million tCO2 national GHG
+        $percentageContribution = $nationalTotalGHG > 0
+            ? round(($totalEmission / $nationalTotalGHG) * 100, 6)
+            : 0;
 
-    $nationalGHG = 256150000; // 256.15 million tonnes in CO₂ equivalent
-    $percentageContribution = $nationalGHG > 0
-        ? ($totalEmission / $nationalGHG) * 100
-        : 0;
-
-        Log::debug('Dashboard Data:', [
-            'totalEmission' => round($totalEmission, 2),
-            'total_sequestration' => round($totalSequestrationTon, 2),
-            'carbon_variance' => round($carbonVariance, 2),
-            'percentage_contribution' => round($percentageContribution, 2),
+        return response()->json([
+            'totalEmission' => round($totalEmission, 3),
+            'total_sequestration' => round($totalSequestration, 3),
+            'carbon_variance' => round($carbonVariance, 3),
+            'percentage_contribution' => $percentageContribution
         ]);
-
-    return response()->json([
-        'totalEmission' => round($totalEmission, 2),
-        'total_sequestration' => round($totalSequestrationTon, 2),
-        'carbon_variance' => round($carbonVariance, 2),
-        'percentage_contribution' => round($percentageContribution, 2),
-    ]);
-}
-
+    }
 
     
     

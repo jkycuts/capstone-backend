@@ -24,6 +24,7 @@ class Scope3Emission extends Model
          'month',
          'mode',
          'quarter',
+         'gas_type',
      ];
  
      // Optionally define relationships to other models, if needed

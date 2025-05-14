@@ -11,8 +11,8 @@ use App\Http\Controllers\Auth\CarbonSequestrationController;
 use App\Http\Controllers\Auth\GHGEmissionController;
 use App\Http\Controllers\Auth\AnnualSummaryController;
 use App\Http\Controllers\Auth\TreeGrowthController;
-use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\AdminDashboardController;
 use App\Http\Middleware\CheckRole;
 
 
@@ -28,17 +28,21 @@ use App\Http\Middleware\CheckRole;
 |
 */
 
-Route::middleware(['auth:api']) // Ensure the user is authenticated
-    ->get('/admin/some-action', [AdminController::class, 'someAdminAction']);
 
-    Route::middleware('auth')->get('/superadmin', [AdminController::class, 'index'])->name('admin.index');
 
 // Admin
 Route::middleware(['auth:sanctum', 'role:super_admin'])->group(function () {
-    Route::get('/superadmin/dashboard', [AdminController::class, 'index']);
+    Route::get('/user/summary',  [AdminDashboardController::class, 'summary']);
+    Route::get('/user/trends',   [AdminDashboardController::class, 'trends']);
+    Route::get('/user/company',[AdminDashboardController::class, 'companies']);
+    Route::get('/admin/company/{company}', [AdminDashboardController::class, 'companyProfile']);
+    Route::get('/admin/company-data', [AdminDashboardController::class, 'getCompanyStats']);
+   
+
 });
 
-
+    Route::get('/admin/ghg-summary', [AdminDashboardController::class, 'getCompanySummaries']);
+    Route::get('/admin/years', [AdminDashboardController::class, 'getAvailableYears']);
 
 // Public APIs
     Route::post('/user/login',      [AuthController::class, 'login'])->name('user.login');
@@ -70,12 +74,13 @@ Route::middleware(['auth:sanctum', 'role:super_admin'])->group(function () {
         Route::get('/tree-growth/{id}',         [CarbonSequestrationController::class, 'show']);
         Route::post('/tree-growth',             [CarbonSequestrationController::class, 'storeTreeGrowth']);
         Route::post('/tree-growth/{id}',         [CarbonSequestrationController::class, 'updateTreeGrowth']);
-        Route::get('/tree-growth',         [CarbonSequestrationController::class, 'indexTreeGrowth']);
+        Route::get('/tree-growth',              [CarbonSequestrationController::class, 'indexTreeGrowth']);
+        Route::get('/carbon-sequestration/total',              [CarbonSequestrationController::class, 'getTotalSequestration']);
 
     // Carbon Sequestration Calculation
         Route::get('/carbon-sequestration/{plantationId}', [CarbonSequestrationController::class, 'calculateCarbonSequestration']);
        
-        Route::get('/dashboard-summary', [AnnualSummaryController::class, 'fetchDashboardData']);
+        Route::get('/dashboard-summary',                    [AnnualSummaryController::class, 'fetchDashboardData']);
 
         Route::get('/calculate-annual-emissions/{year}', [CarbonSequestrationController::class, 'calculateAnnualEmissions']);
 
@@ -86,15 +91,19 @@ Route::middleware(['auth:sanctum', 'role:super_admin'])->group(function () {
 
 
     // Scope 2 Emission
-        Route::post('/ghg-emission/electricity',                        [GhgEmissionController::class, 'storeScope2Emission']);
-        Route::get('/ghg-emission/electricity',                         [GhgEmissionController::class, 'getScope2Emissions']);
+        Route::post('/ghg-emission/electricity',              [GhgEmissionController::class, 'storeScope2Emission']);
+        Route::get('/ghg-emission/electricity',               [GhgEmissionController::class, 'getScope2Emissions']);
+        Route::get('/ghg-emission/electricity/details',        [GHGEmissionController::class, 'scope2ReferenceDetails']);
 
     // Scope 3 Emission
-        Route::post('ghg-emission/travel', [GHGEmissionController::class, 'storeScope3Emission']);
+        Route::post('ghg-emission/travel',                      [GHGEmissionController::class, 'storeScope3Emission']);
+        Route::get('/ghg-emission/travel/details',              [GHGEmissionController::class, 'scope3ReferenceDetails']);
+        Route::get('/ghg-emission/travels/details',              [GHGEmissionController::class, 'scopes3ReferenceDetails']);
 
         // Fetch all Scope 3 emissions for a specific company
         Route::post('ghg-emission/travel', [GHGEmissionController::class, 'storeScope3Emission']);
         Route::get('ghg-emission/travel', [GHGEmissionController::class, 'getScope3Emission']);
+
 
         Route::get('/simulate-growth/{treeId}', [TreeGrowthController::class, 'simulateTreeGrowth']);
 
