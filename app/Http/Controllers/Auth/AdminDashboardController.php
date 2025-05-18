@@ -76,11 +76,26 @@ public function getCompanySummaries(Request $request): JsonResponse
 
         $totalEmissions = $scope1 + $scope2 + $scope3;
 
-        $totalSequestration = DB::table('tree_growth as tg')
-            ->join('plantation as tp', 'tg.plantation_id', '=', 'tp.id')
-            ->where('tp.company_id', $company->id)
-            ->whereYear('tg.created_at', $year)
-            ->sum('tg.CO2_sequestration') ?? 0;
+        // Filter TreeGrowth by year and company
+        $treeGrowths = TreeGrowth::where('year_recorded', $year) // <- Year filter here
+            ->whereHas('plantation', function ($query) use ($company) {
+                $query->where('company_id', $company->id);
+            })->get();
+
+        $totalSequestration = 0;
+
+        foreach ($treeGrowths as $tree) {
+            $dbh = $tree->dbh;
+
+            // Sequestration formula
+            $AGB = 34.4703 - (8.0671 * $dbh) + (0.6589 * pow($dbh, 2));
+            $BGB = $AGB * 0.15;
+            $biomass = $AGB + $BGB;
+            $carbon = $biomass * 0.5;
+            $co2 = $carbon * 3.67;
+
+            $totalSequestration += $co2;
+        }
 
         $netVariance = $totalSequestration - $totalEmissions;
 
@@ -101,6 +116,8 @@ public function getCompanySummaries(Request $request): JsonResponse
 
     return response()->json($data);
 }
+
+
 
 
 public function getAvailableYears(): JsonResponse

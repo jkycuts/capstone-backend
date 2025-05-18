@@ -34,7 +34,7 @@ class UserRequest extends FormRequest
                 'email'         => 'required|email|unique:users,email,' . $this->id,
                 'password'      => $this->isMethod('post') ? 'required|min:8' : 'nullable|min:8',
                 'role'          => 'in:admin,user,agency',
-                'company_id'    => 'required|exists:mining_companies,id'
+                
             ];
         } else if (request()->routeIs('user.update')) {
             return [

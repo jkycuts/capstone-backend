@@ -22,8 +22,15 @@ class Scope1Emission extends Model
         'parameter',
         'fuel_type',
         'fuel_liters_used',
-        'emission_factor',
-        'gwp',
+        'co2_emission_factor',
+        'ch4_emission_factor',
+        'n2o_emission_factor',
+        'co2_gwp',
+        'ch4_gwp',
+        'n2o_gwp',
+        'emission_co2e',
+        'emission_ch4e',
+        'emission_n2oe',
         'emission_tco2e',
     ];
 

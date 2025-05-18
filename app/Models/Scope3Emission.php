@@ -19,12 +19,18 @@ class Scope3Emission extends Model
         'travel_type',
         'travel_distance_miles',
         'emission_tco2e',
-         'emission_factor',
-         'gwp',
+         
          'month',
          'mode',
          'quarter',
-         'gas_type',
+
+        'co2_emission_factor',
+        'ch4_emission_factor',
+        'n2o_emission_factor',
+        'co2_gwp',
+        'ch4_gwp',
+        'n2o_gwp',
+         
      ];
  
      // Optionally define relationships to other models, if needed

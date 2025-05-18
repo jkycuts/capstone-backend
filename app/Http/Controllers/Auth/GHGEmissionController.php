@@ -37,74 +37,88 @@ public function getScope1Emissions()
    
 public function storeScope1(Request $request)
 {
-
     try {
+        // Validate input
+        $validated = $request->validate([
+            'mode'                      => 'required|in:monthly,quarterly',
+            'year'                      => 'required|integer',
+            'parameter'                 => 'required|string',
+            'fuel_type'                 => 'required|string',
+            'fuel_liters_used'          => 'required|numeric|min:0',
 
-    // Validate input
-    $validated = $request->validate([
-        'mode'                      => 'required|in:monthly,quarterly',
-        'year'                      => 'required|integer',
-        'parameter'                 => 'required|string',
-        'fuel_type'                 => 'required|string',
-        'fuel_liters_used'          => 'required|numeric|min:0',
-        'emission_factor'           => 'required|numeric|min:0',
-        'gwp'                       => 'required|numeric|min:0',
-        'month'                     => 'nullable|string',
-        'quarter'                   => 'nullable|string',
-    ]);
+            'co2_emission_factor'       => 'required|numeric|min:0',
+            'ch4_emission_factor'       => 'required|numeric|min:0',
+            'n2o_emission_factor'       => 'required|numeric|min:0',
 
-    // Ensure month and quarter are set based on mode
-    $month = ($validated['mode'] === 'monthly') ? $validated['month'] : null;
-    $quarter = ($validated['mode'] === 'quarterly') ? $validated['quarter'] : null;
+            'co2_gwp'                   => 'required|numeric|min:0',
+            'ch4_gwp'                   => 'required|numeric|min:0',
+            'n2o_gwp'                   => 'required|numeric|min:0',
 
-    // Ensure authenticated user
-    if (!Auth::check()) {
-        return response()->json(['error' => 'User not authenticated.'], 401);
-    }
+            'month'                     => 'nullable|string',
+            'quarter'                   => 'nullable|string',
+        ]);
 
-    $companyId = Auth::user()->company_id;
+        // Ensure authenticated user
+        if (!Auth::check()) {
+            return response()->json(['error' => 'User not authenticated.'], 401);
+        }
 
-    $litersUsed      = $validated['fuel_liters_used'];
-    $emissionFactor  = $validated['emission_factor'];
-    $gwp             = $validated['gwp'];
+        $companyId = Auth::user()->company_id;
+        $litersUsed = $validated['fuel_liters_used'];
 
-    // Compute total emissions (tCO2e)
-    $emissionTotal = ($litersUsed * $emissionFactor * $gwp) / 1000;
+        // Calculate emissions per gas
+        $co2 = $litersUsed * $validated['co2_emission_factor'] * $validated['co2_gwp'];
+        $ch4 = $litersUsed * $validated['ch4_emission_factor'] * $validated['ch4_gwp'];
+        $n2o = $litersUsed * $validated['n2o_emission_factor'] * $validated['n2o_gwp'];
 
-    // Save to DB
-    $scope1 = Scope1Emission::create([
-        'company_id'        => $companyId,
-        'year'              => $validated['year'],
-        'mode'              => $validated['mode'],
-        'month'             => $validated['mode'] === 'monthly' ? $validated['month'] : null,
-        'quarter'           => $validated['mode'] === 'quarterly' ? $validated['quarter'] : null,
-        'parameter'         => ucfirst($validated['parameter']),
-        'fuel_type'         => strtolower($validated['fuel_type']),
-        'fuel_liters_used'  => $litersUsed,
-        'emission_factor'   => $emissionFactor,
-        'gwp'               => $gwp,
-        'emission_tco2e'    => round($emissionTotal, 4),
-    ]);
+        $emissionTotal = $co2 + $ch4 + $n2o;
 
-    return response()->json([
-        'message' => 'Scope 1 Emission Data Saved Successfully.',
-        'data' => [
-            'record' => $scope1,
-            'calculation' => [
-                'Fuel Used (liters)' => $litersUsed,
-                'Emission Factor'    => $emissionFactor,
-                'GWP'                => $gwp,
-                'Total (tCO2e)'      => round($emissionTotal, 4),
+        // Save to DB
+        $scope1 = Scope1Emission::create([
+            'company_id'            => $companyId,
+            'year'                  => $validated['year'],
+            'mode'                  => $validated['mode'],
+            'month'                 => $validated['mode'] === 'monthly' ? $validated['month'] : null,
+            'quarter'               => $validated['mode'] === 'quarterly' ? $validated['quarter'] : null,
+            'parameter'             => ucfirst($validated['parameter']),
+            'fuel_type'             => strtolower($validated['fuel_type']),
+            'fuel_liters_used'      => $litersUsed,
+
+            'co2_emission_factor'   => $validated['co2_emission_factor'],
+            'ch4_emission_factor'   => $validated['ch4_emission_factor'],
+            'n2o_emission_factor'   => $validated['n2o_emission_factor'],
+
+            'co2_gwp'               => $validated['co2_gwp'],
+            'ch4_gwp'               => $validated['ch4_gwp'],
+            'n2o_gwp'               => $validated['n2o_gwp'],
+
+            'emission_co2e'         => round($co2, 4),
+            'emission_ch4e'         => round($ch4, 4),
+            'emission_n2oe'         => round($n2o, 4),
+            'emission_tco2e'        => round($emissionTotal, 4),
+        ]);
+
+        return response()->json([
+            'message' => 'Scope 1 Emission Data Saved Successfully.',
+            'data' => [
+                'record' => $scope1,
+                'calculation' => [
+                    'Fuel Used (liters)' => $litersUsed,
+                    'CO2 (tCO2e)'        => round($co2, 4),
+                    'CH4 (tCO2e)'        => round($ch4, 4),
+                    'N2O (tCO2e)'        => round($n2o, 4),
+                    'Total (tCO2e)'      => round($emissionTotal, 4),
+                ]
             ]
-        ]
-    ], 201);
-
+        ], 201);
     } catch (\Exception $e) {
         return response()->json([
             'error' => 'Server error: ' . $e->getMessage()
         ], 500);
     }
 }
+
+
 
     
 
@@ -159,42 +173,71 @@ public function storeScope1(Request $request)
 public function storeScope3Emission(Request $request)
 {
     $validated = $request->validate([
-        'year' => 'required|integer',
-        'mode' => 'required|in:monthly,quarterly',
-        'month' => 'nullable|string',
-        'quarter' => 'nullable|string',
-        'travel_type' => 'required|in:short,medium,long',
-        'travel_distance_miles' => 'required|numeric|min:0',
-        'gas_type' => 'required|in:co2,ch4,n2o',
-        'emission_factor' => 'required|numeric|min:0',
-        'gwp' => 'nullable|numeric|min:0',
+        'year'                      => 'required|integer',
+        'mode'                      => 'required|in:monthly,quarterly',
+        'month'                     => 'nullable|string',
+        'quarter'                   => 'nullable|string',
+        'travel_type'               => 'required|in:short,medium,long',
+        'travel_distance_miles'     => 'required|numeric|min:0',
+        'co2_emission_factor'       => 'required|numeric|min:0',
+        'ch4_emission_factor'       => 'required|numeric|min:0',
+        'n2o_emission_factor'       => 'required|numeric|min:0',
+        'co2_gwp'                   => 'required|numeric|min:0',
+        'ch4_gwp'                   => 'required|numeric|min:0',
+        'n2o_gwp'                   => 'required|numeric|min:0',
     ]);
 
-    $companyId = auth()->user()->company_id;
+    try {
+        $companyId = auth()->user()->company_id;
 
-    $gwp = $request->input('gwp'); 
-    $travel_distance = $validated['travel_distance_miles'];
-    $emission_factor = $validated['emission_factor'];
+        $distance = $validated['travel_distance_miles'];
 
-    // Emissions = distance × emission factor × GWP
-    $emissions_kg = $travel_distance * $emission_factor * $gwp;
-    $emissions_tco2e = $emissions_kg / 1000;
+        // Calculate emissions by gas
+        $co2 = $distance * $validated['co2_emission_factor'] * $validated['co2_gwp'];
+        $ch4 = $distance * $validated['ch4_emission_factor'] * $validated['ch4_gwp'];
+        $n2o = $distance * $validated['n2o_emission_factor'] * $validated['n2o_gwp'];
 
-    Scope3Emission::create([
-        'company_id' => $companyId,
-        'year' => $validated['year'],
-        'mode' => $validated['mode'],
-        'month' => $validated['month'],
-        'quarter' => $validated['quarter'],
-        'travel_type' => $validated['travel_type'],
-        'travel_distance_miles' => $travel_distance,
-        'gas_type' => $validated['gas_type'],
-        'emission_factor' => $emission_factor,
-        'gwp' => $gwp,
-        'emission_tco2e' => $emissions_tco2e,
-    ]);
+        $emissionTotal = $co2 + $ch4 + $n2o;  // in kg CO2e
+        $emission_tco2e = $emissionTotal / 1000; // convert to metric tons CO2e
 
-    return response()->json(['message' => 'Scope 3 travel emissions recorded successfully.']);
+        $record = Scope3Emission::create([
+            'company_id'            => $companyId,
+            'year'                  => $validated['year'],
+            'mode'                  => $validated['mode'],
+            'month'                 => $validated['month'],
+            'quarter'               => $validated['quarter'],
+            'travel_type'           => $validated['travel_type'],
+            'travel_distance_miles' => $distance,
+
+            'co2_emission_factor'   => $validated['co2_emission_factor'],
+            'ch4_emission_factor'   => $validated['ch4_emission_factor'],
+            'n2o_emission_factor'   => $validated['n2o_emission_factor'],
+            'co2_gwp'               => $validated['co2_gwp'],
+            'ch4_gwp'               => $validated['ch4_gwp'],
+            'n2o_gwp'               => $validated['n2o_gwp'],
+            'emission_tco2e'        => $emission_tco2e,
+        ]);
+
+        return response()->json([
+            'message' => 'Scope 3 Emission Data Saved Successfully.',
+            'data' => [
+                'record' => $record,
+                'calculation' => [
+                    'Travel Type'           => $validated['travel_type'],
+                    'Travel Distance (miles)' => $distance,
+                    'CO2 (tCO2e)'           => round($co2 / 1000, 4),
+                    'CH4 (tCO2e)'           => round($ch4 / 1000, 4),
+                    'N2O (tCO2e)'           => round($n2o / 1000, 4),
+                    'Total (tCO2e)'         => round($emission_tco2e, 4),
+                ],
+            ],
+        ], 201);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Server error: ' . $e->getMessage()
+        ], 500);
+    }
 }
 
 
@@ -228,59 +271,82 @@ public function scope1ReferenceDetails(Request $request)
     $companyId = auth()->user()->company_id;
 
     $records = Scope1Emission::where('company_id', $companyId)
-        ->select('year', 'parameter', 'fuel_type', DB::raw('SUM(fuel_liters_used) as total_liters'))
-        ->groupBy('year', 'parameter', 'fuel_type')
+        ->select(
+            'year',
+            'month',
+            'quarter',
+            'parameter',
+            'fuel_type',
+            DB::raw('SUM(fuel_liters_used) as total_liters'),
+            DB::raw('MAX(co2_emission_factor) as co2_emission_factor'),
+            DB::raw('MAX(ch4_emission_factor) as ch4_emission_factor'),
+            DB::raw('MAX(n2o_emission_factor) as n2o_emission_factor'),
+            DB::raw('MAX(co2_gwp) as co2_gwp'),
+            DB::raw('MAX(ch4_gwp) as ch4_gwp'),
+            DB::raw('MAX(n2o_gwp) as n2o_gwp')
+        )
+        ->groupBy('year', 'month', 'quarter', 'parameter', 'fuel_type')
+        ->orderBy('year')
+        ->orderBy('month')
         ->get();
-
-    // Emission factors and GWP values
-    $emissionFactors = [
-        'diesel' => ['co2' => 2.68, 'ch4' => 0.0001, 'n2o' => 0.0002],
-        'gasoline' => ['co2' => 2.31, 'ch4' => 0.0002, 'n2o' => 0.0001],
-        'biodiesel' => ['co2' => 2.50, 'ch4' => 0.00015, 'n2o' => 0.0001],
-        'ethanol' => ['co2' => 1.50, 'ch4' => 0.0001, 'n2o' => 0.0001],
-    ];
-
-    $gwp = ['co2' => 1, 'ch4' => 25, 'n2o' => 298];
 
     $response = [];
 
     foreach ($records as $rec) {
-        $fuel = strtolower($rec->fuel_type);
-        $factors = $emissionFactors[$fuel] ?? ['co2' => 0, 'ch4' => 0, 'n2o' => 0];
+        $co2_factor = floatval($rec->co2_emission_factor);
+        $ch4_factor = floatval($rec->ch4_emission_factor);
+        $n2o_factor = floatval($rec->n2o_emission_factor);
 
-        // Calculate the emissions
-        $co2 = $rec->total_liters * $factors['co2'] * $gwp['co2'];
-        $ch4 = $rec->total_liters * $factors['ch4'] * $gwp['ch4'];
-        $n2o = $rec->total_liters * $factors['n2o'] * $gwp['n2o'];
+        $co2_gwp = floatval($rec->co2_gwp);
+        $ch4_gwp = floatval($rec->ch4_gwp);
+        $n2o_gwp = floatval($rec->n2o_gwp);
 
-        // Convert each emission to tons (by dividing by 1000)
-        $co2_ton = $co2 / 1000;
-        $ch4_ton = $ch4 / 1000;
-        $n2o_ton = $n2o / 1000;
+        // Calculate emissions in kg
+        $co2_kg = $rec->total_liters * $co2_factor * $co2_gwp;
+        $ch4_kg = $rec->total_liters * $ch4_factor * $ch4_gwp;
+        $n2o_kg = $rec->total_liters * $n2o_factor * $n2o_gwp;
 
-        // Calculate the total emissions in tons
-        $totalEmission = $co2_ton + $ch4_ton + $n2o_ton;
+        // Convert to tons
+        $co2_ton = $co2_kg / 1000;
+        $ch4_ton = $ch4_kg / 1000;
+        $n2o_ton = $n2o_kg / 1000;
+
+        $totalEmission_ton = $co2_ton + $ch4_ton + $n2o_ton;
 
         $response[] = [
             'year' => $rec->year,
+            'month' => $rec->month,
+            'quarter' => $rec->quarter,
             'parameter' => $rec->parameter,
             'fuel_type' => $rec->fuel_type,
-            'total_liters' => $rec->total_liters,
-            'emissions' => [
-                'co2' => round($co2_ton, 3),  // Rounded to 3 decimal places
-                'ch4' => round($ch4_ton, 4),  // Rounded to 4 decimal places
-                'n2o' => round($n2o_ton, 4),  // Rounded to 4 decimal places
+            'total_liters' => (float) $rec->total_liters,
+            'emissions_kg' => [
+                'co2' => round($co2_kg, 2),
+                'ch4' => round($ch4_kg, 2),
+                'n2o' => round($n2o_kg, 2),
             ],
-            'emission_tco2e' => round($totalEmission, 3),  // Total emission in tons (tCO2e)
-            'emission_factors' => $factors,
-            'gwp' => $gwp,
+            'emissions_ton' => [
+                'co2' => round($co2_ton, 3),
+                'ch4' => round($ch4_ton, 4),
+                'n2o' => round($n2o_ton, 4),
+            ],
+            'emission_tco2e_kg' => round($co2_kg + $ch4_kg + $n2o_kg, 2),
+            'emission_tco2e_ton' => round($totalEmission_ton, 3),
+            'emission_factors' => [
+                'co2' => $co2_factor,
+                'ch4' => $ch4_factor,
+                'n2o' => $n2o_factor,
+            ],
+            'gwp' => [
+                'co2' => $co2_gwp,
+                'ch4' => $ch4_gwp,
+                'n2o' => $n2o_gwp,
+            ],
         ];
     }
 
     return response()->json($response);
 }
-
-
 
 
 
@@ -337,72 +403,80 @@ public function scope3ReferenceDetails(Request $request)
 {
     $companyId = auth()->user()->company_id;
 
-    
-
-    // Fetch records for the specified company
+    // Fetch records grouped by year, quarter, month, travel_type, summing distance
     $records = Scope3Emission::where('company_id', $companyId)
         ->select(
             'year',
             'quarter',
             'month',
             'travel_type',
-            'travel_distance_miles',
-            'emission_factor',
-            'gwp',
-            'gas_type'
+            DB::raw('SUM(travel_distance_miles) as total_distance'),
+            DB::raw('MAX(co2_emission_factor) as co2_emission_factor'),
+            DB::raw('MAX(ch4_emission_factor) as ch4_emission_factor'),
+            DB::raw('MAX(n2o_emission_factor) as n2o_emission_factor'),
+            DB::raw('MAX(co2_gwp) as co2_gwp'),
+            DB::raw('MAX(ch4_gwp) as ch4_gwp'),
+            DB::raw('MAX(n2o_gwp) as n2o_gwp')
         )
+        ->groupBy('year', 'quarter', 'month', 'travel_type')
+        ->orderBy('year')
+        ->orderBy('quarter')
+        ->orderBy('month')
         ->get();
 
-    // Initialize the grouped data array
-    $grouped = [];
+    $response = [];
 
-    // Process the records and calculate emissions
-    foreach ($records as $record) {
-        // Use a composite key to group by year, quarter, month, and travel type
-        $key = "{$record->year}-{$record->quarter}-{$record->month}-{$record->travel_type}";
+    foreach ($records as $rec) {
+        // Calculate emissions per gas in kg
+        $co2_kg = $rec->total_distance * $rec->co2_emission_factor * $rec->co2_gwp;
+        $ch4_kg = $rec->total_distance * $rec->ch4_emission_factor * $rec->ch4_gwp;
+        $n2o_kg = $rec->total_distance * $rec->n2o_emission_factor * $rec->n2o_gwp;
 
-        // Initialize the group if it doesn't exist
-        if (!isset($grouped[$key])) {
-            $grouped[$key] = [
-                'year' => $record->year,
-                'category' => $record->travel_type,
-                'quarter' => $record->quarter,
-                'month' => $record->month,
-                'total_distance' => 0,
-                'emissions' => [
-                    'co2' => ['value' => 0, 'gwp' => null, 'emission_factor' => null],
-                    'ch4' => ['value' => 0, 'gwp' => null, 'emission_factor' => null],
-                    'n2o' => ['value' => 0, 'gwp' => null, 'emission_factor' => null],
-                ],
-            ];
-        }
+        // Convert to tons
+        $co2_ton = $co2_kg / 1000;
+        $ch4_ton = $ch4_kg / 1000;
+        $n2o_ton = $n2o_kg / 1000;
 
-        // Get the gas type and make sure it's in the acceptable list
-        $gas = strtolower($record->gas_type);
-        if (!in_array($gas, ['co2', 'ch4', 'n2o'])) continue;
+        $total_emission_ton = $co2_ton + $ch4_ton + $n2o_ton;
 
-        // Calculate the emission for the given gas
-        $emission = $record->travel_distance_miles * $record->emission_factor * $record->gwp;
-
-        // Add to the corresponding group
-        $grouped[$key]['total_distance'] += $record->travel_distance_miles;
-        $grouped[$key]['emissions'][$gas]['value'] += $emission;
-        $grouped[$key]['emissions'][$gas]['gwp'] = $record->gwp;
-        $grouped[$key]['emissions'][$gas]['emission_factor'] = $record->emission_factor;
+        $response[] = [
+            'year' => $rec->year,
+            'quarter' => $rec->quarter,
+            'month' => $rec->month,
+            'travel_type' => $rec->travel_type,
+            'total_distance_miles' => (float)$rec->total_distance,
+            'emissions_kg' => [
+                'co2' => round($co2_kg, 2),
+                'ch4' => round($ch4_kg, 2),
+                'n2o' => round($n2o_kg, 2),
+            ],
+            'emissions_ton' => [
+                'co2' => round($co2_ton, 3),
+                'ch4' => round($ch4_ton, 4),
+                'n2o' => round($n2o_ton, 4),
+            ],
+            'emission_tco2e_kg' => round($co2_kg + $ch4_kg + $n2o_kg, 2),
+            'emission_tco2e_ton' => round($total_emission_ton, 3),
+            'emission_factors' => [
+                'co2' => $rec->co2_emission_factor,
+                'ch4' => $rec->ch4_emission_factor,
+                'n2o' => $rec->n2o_emission_factor,
+            ],
+            'gwp' => [
+                'co2' => $rec->co2_gwp,
+                'ch4' => $rec->ch4_gwp,
+                'n2o' => $rec->n2o_gwp,
+            ],
+        ];
     }
 
-    // Calculate the total emissions for each group
-    foreach ($grouped as &$group) {
-        $totalEmissions = 0;
-        foreach ($group['emissions'] as $gas => $emissionData) {
-            $totalEmissions += $emissionData['value']; // Sum up all gas emissions
-        }
-        $group['emission_tco2e'] = $totalEmissions; // Store the total emissions in the group
-    }
-
-    // Return the grouped data as a JSON response
-    return response()->json(array_values($grouped));
+    return response()->json($response);
 }
+
+
+
+
+
 
 public function scopes3ReferenceDetails(Request $request)
 {

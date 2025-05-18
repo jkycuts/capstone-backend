@@ -75,7 +75,7 @@ Route::middleware(['auth:sanctum', 'role:super_admin'])->group(function () {
         Route::post('/tree-growth',             [CarbonSequestrationController::class, 'storeTreeGrowth']);
         Route::post('/tree-growth/{id}',         [CarbonSequestrationController::class, 'updateTreeGrowth']);
         Route::get('/tree-growth',              [CarbonSequestrationController::class, 'indexTreeGrowth']);
-        Route::get('/carbon-sequestration/total',              [CarbonSequestrationController::class, 'getTotalSequestration']);
+        Route::get('/carbon-sequestration/total',   [CarbonSequestrationController::class, 'getYearlySequestrationSummary']);
 
     // Carbon Sequestration Calculation
         Route::get('/carbon-sequestration/{plantationId}', [CarbonSequestrationController::class, 'calculateCarbonSequestration']);

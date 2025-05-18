@@ -253,22 +253,56 @@ class CarbonSequestrationController extends Controller
     }
 
     
-    public function getTotalSequestration()
+
+
+public function getYearlySequestrationSummary()
 {
     try {
-        $totalKg = TreeGrowth::sum('CO2_sequestration');
-        $totalTCO2E = $totalKg / 1000;
+        $treeGrowths = TreeGrowth::select('year_recorded', 'dbh', 'height') // add fields if needed
+            ->get();
 
-        return response()->json([
-            'total_carbon_sequestration_kg' => round($totalKg, 2),
-            'total_carbon_sequestration_tco2e' => round($totalTCO2E, 2)
-        ]);
+        $yearlyTotals = [];
+
+        foreach ($treeGrowths as $tree) {
+            $dbh = $tree->dbh;
+            $height = $tree->height;
+            $year = $tree->year_recorded;
+
+            // Sample sequestration calculation (adjust as per your formula)
+             $AGB = 34.4703 - (8.0671 * $tree->dbh) + (0.6589 * pow($tree->dbh, 2));
+            $BGB = $AGB * 0.15;
+            $biomass = $AGB + $BGB;
+            $carbon = $biomass * 0.5;
+            $co2 = $carbon * 3.67;
+            $co2_ton = $co2 / 1000;
+
+            if (!isset($yearlyTotals[$year])) {
+                $yearlyTotals[$year] = 0;
+            }
+
+            $yearlyTotals[$year] += $co2; // in kg
+        }
+
+        // Format results
+        $result = [];
+        foreach ($yearlyTotals as $year => $total_kg) {
+            $result[] = [
+                'year' => $year,
+                'total_carbon_sequestration_kg' => round($total_kg, 2),
+                'total_carbon_sequestration_tco2e' => round($total_kg / 1000, 2)
+            ];
+        }
+
+        return response()->json($result);
     } catch (\Exception $e) {
         return response()->json([
-            'error' => 'Failed to calculate total carbon sequestration.',
+            'error' => 'Failed to compute dynamic sequestration per year.',
             'details' => $e->getMessage()
         ], 500);
     }
 }
+
+
+
 
 }

@@ -24,40 +24,58 @@ class AnnualSummaryController extends Controller
 public function fetchDashboardData()
 {
     $user = Auth::user();
-        $companyId = $user->company_id;
+    $companyId = $user->company_id;
 
-        // Scope 1
-        $fuel = Scope1Emission::where('company_id', $companyId)->sum('emission_tco2e');
+    // Scope 1
+    $fuel = Scope1Emission::where('company_id', $companyId)->sum('emission_tco2e');
 
-        // Scope 2
-        $electricity = Scope2Emission::where('company_id', $companyId)->sum('emission_tco2e');
+    // Scope 2
+    $electricity = Scope2Emission::where('company_id', $companyId)->sum('emission_tco2e');
 
-        // Scope 3
-        $travel = Scope3Emission::where('company_id', $companyId)->sum('emission_tco2e');
-        
+    // Scope 3
+    $travel = Scope3Emission::where('company_id', $companyId)->sum('emission_tco2e');
 
-        // Sum all emissions
-        $totalEmission = $fuel + $electricity + $travel ;
+    // Sum all emissions
+    $totalEmission = $fuel + $electricity + $travel;
 
-        // Carbon Sequestration from tree planting
-        $totalSequestration = TreeGrowth::where('plantation_id', $companyId)->sum('co2_sequestration');
+    // Dynamic Carbon Sequestration calculation for this company
+    $treeGrowths = TreeGrowth::whereHas('plantation', function ($query) use ($companyId) {
+        $query->where('company_id', $companyId);
+    })->get();
 
-        // Carbon Neutrality Variance
-        $carbonVariance = $totalEmission - $totalSequestration;
+    $totalSequestration = 0;
 
-        // National contribution (static divisor or configurable later)
-        $nationalTotalGHG = 150000000; // Example: 150 million tCO2 national GHG
-        $percentageContribution = $nationalTotalGHG > 0
-            ? round(($totalEmission / $nationalTotalGHG) * 100, 6)
-            : 0;
+    foreach ($treeGrowths as $tree) {
+        $dbh = $tree->dbh;
 
-        return response()->json([
-            'totalEmission' => round($totalEmission, 3),
-            'total_sequestration' => round($totalSequestration, 3),
-            'carbon_variance' => round($carbonVariance, 3),
-            'percentage_contribution' => $percentageContribution
-        ]);
+        // Your sequestration formula (AGB, BGB, biomass, carbon, CO2)
+        $AGB = 34.4703 - (8.0671 * $dbh) + (0.6589 * pow($dbh, 2));
+        $BGB = $AGB * 0.15;
+        $biomass = $AGB + $BGB;
+        $carbon = $biomass * 0.5;
+        $co2 = $carbon * 3.67; // in kg CO2
+
+        $totalSequestration += $co2;
     }
+
+    
+
+    // Carbon Neutrality Variance
+    $carbonVariance = $totalEmission - $totalSequestration;
+
+    // National contribution (static divisor or configurable later)
+    $nationalTotalGHG = 150000000; // Example: 150 million tCO2 national GHG
+    $percentageContribution = $nationalTotalGHG > 0
+        ? round(($totalEmission / $nationalTotalGHG) * 100, 6)
+        : 0;
+
+    return response()->json([
+        'totalEmission' => round($totalEmission, 3),
+        'total_sequestration' => round($totalSequestration, 3),
+        'carbon_variance' => round($carbonVariance, 3),
+        'percentage_contribution' => $percentageContribution,
+    ]);
+}
 
     
     
