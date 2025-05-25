@@ -31,7 +31,7 @@ class AnnualSummary extends Model
 
    public function company()
 {
-    return $this->belongsTo(MiningCompany::class);
+    return $this->belongsTo(MiningCompany::class, 'company_id');
 }
 
 

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\MiningCompany;
 use App\Models\TreeGrowth;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 
 class AdminDashboardController extends Controller
@@ -166,6 +167,55 @@ public function getAvailableYears(): JsonResponse
         ], 500);
     }
 }
+
+
+public function getCompanyDetails($companyId, $year): JsonResponse
+{
+    $company = MiningCompany::find($companyId);
+
+    if (!$company) {
+        return response()->json(['error' => 'Company not found'], 404);
+    }
+
+    $scope1 = Scope1Emission::where('company_id', $companyId)->where('year', $year)->sum('emission_tco2e') ?? 0;
+    $scope2 = Scope2Emission::where('company_id', $companyId)->where('year', $year)->sum('emission_tco2e') ?? 0;
+    $scope3 = Scope3Emission::where('company_id', $companyId)->where('year', $year)->sum('emission_tco2e') ?? 0;
+
+    $totalEmissions = $scope1 + $scope2 + $scope3;
+
+    $treeGrowths = TreeGrowth::where('year_recorded', $year)
+        ->whereHas('plantation', function ($query) use ($companyId) {
+            $query->where('company_id', $companyId);
+        })->get();
+
+    $totalSequestration = 0;
+
+    foreach ($treeGrowths as $tree) {
+        $dbh = $tree->dbh;
+        $AGB = 34.4703 - (8.0671 * $dbh) + (0.6589 * pow($dbh, 2));
+        $BGB = $AGB * 0.15;
+        $biomass = $AGB + $BGB;
+        $carbon = $biomass * 0.5;
+        $co2 = $carbon * 3.67;
+        $totalSequestration += $co2;
+    }
+
+    $netVariance = $totalSequestration - $totalEmissions;
+    $status = $netVariance >= 0 ? 'Carbon Neutral' : 'Not Neutral';
+
+    return response()->json([
+        'company_id'           => $companyId,
+        'company_name'         => $company->name,
+        'location'             => $company->location,
+        'year'                 => $year,
+        'total_emissions'      => round($totalEmissions, 2),
+        'total_sequestration'  => round($totalSequestration, 2),
+        'net_variance'         => round($netVariance, 2),
+        'status'               => $status
+    ]);
+}
+
+
 
 
 

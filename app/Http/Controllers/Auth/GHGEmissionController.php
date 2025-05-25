@@ -64,6 +64,7 @@ public function storeScope1(Request $request)
         }
 
         $companyId = Auth::user()->company_id;
+
         $litersUsed = $validated['fuel_liters_used'];
 
         // Calculate emissions per gas
@@ -331,7 +332,7 @@ public function scope1ReferenceDetails(Request $request)
                 'n2o' => round($n2o_ton, 4),
             ],
             'emission_tco2e_kg' => round($co2_kg + $ch4_kg + $n2o_kg, 2),
-            'emission_tco2e_ton' => round($totalEmission_ton, 3),
+            'emission_tco2e' => round($totalEmission_ton, 3),
             'emission_factors' => [
                 'co2' => $co2_factor,
                 'ch4' => $ch4_factor,
@@ -456,7 +457,7 @@ public function scope3ReferenceDetails(Request $request)
                 'n2o' => round($n2o_ton, 4),
             ],
             'emission_tco2e_kg' => round($co2_kg + $ch4_kg + $n2o_kg, 2),
-            'emission_tco2e_ton' => round($total_emission_ton, 3),
+            'emission_tco2e' => round($total_emission_ton, 3),
             'emission_factors' => [
                 'co2' => $rec->co2_emission_factor,
                 'ch4' => $rec->ch4_emission_factor,

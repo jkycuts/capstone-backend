@@ -31,4 +31,9 @@ return [
 
     'supports_credentials' => false,
 
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'admin/*'],
+
+    'allowed_origins' => ['http://127.0.0.1:5500'],
+
+
 ];

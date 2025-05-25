@@ -39,10 +39,13 @@ Route::middleware(['auth:sanctum', 'role:super_admin'])->group(function () {
     Route::get('/admin/company-data', [AdminDashboardController::class, 'getCompanyStats']);
    
 
+
+
 });
 
-    Route::get('/admin/ghg-summary', [AdminDashboardController::class, 'getCompanySummaries']);
-    Route::get('/admin/years', [AdminDashboardController::class, 'getAvailableYears']);
+    Route::get('/admin/ghg-summary',    [AdminDashboardController::class, 'getCompanySummaries']);
+    Route::get('/admin/years',          [AdminDashboardController::class, 'getAvailableYears']);
+    Route::get('/admin/company-details/{companyId}/{year}', [AdminDashboardController::class, 'getCompanyDetails']);
 
 // Public APIs
     Route::post('/user/login',      [AuthController::class, 'login'])->name('user.login');
